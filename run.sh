@@ -105,8 +105,8 @@ else
     echo "Release version: $NEW_TAG"
     git push --tags
     git checkout develop
-    git pull origin/master
-    git push origin/develop
+    git pull origin master
+    git push origin develop
     echo
     echo "$bold Tudo certo! $normal"
 fi
