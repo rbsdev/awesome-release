@@ -1,0 +1,24 @@
+CHANGELOG
+=========
+
+Todas as releases estão documentadas neste arquivo.
+Os detalhes sobre cada alteração podem ser conferidos diretamente na descrição de cada merge request.
+
+Gerado automaticamente pelo [`auto-changelog`](https://github.com/CookPete/auto-changelog).
+
+{{#each releases}}
+  {{#if href}}
+    ## [{{title}}]({{href}})
+  {{else}}
+    ## {{title}}
+  {{/if}}
+
+  > {{niceDate}}
+
+  {{#if merges}}
+    {{#each merges}}
+      - {{{message}}} {{#if href}}[`#{{id}}`]({{href}}){{/if}}
+    {{/each}}
+  {{/if}}
+
+{{/each}}

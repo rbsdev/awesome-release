@@ -1,0 +1,23 @@
+{
+  "name": "awesome-release",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.rbs.com.br:rbsdev/awesome-release.git"
+  },
+  "author": "Time Assinaturas",
+  "license": "ISC",
+  "dependencies": {
+    "auto-changelog": "^1.8.0",
+    "cli-md": "^1.2.0"
+  },
+  "bin": "./run.sh",
+  "directories": {
+    "lib": "./lib"
+  }
+}
