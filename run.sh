@@ -99,13 +99,14 @@ else
     # do dangerous stuff
     echo
     ADD=$(git add CHANGELOG.md package.json)
-    MESSAGE1=$(git commit -m "Release version: $NEW_TAG")
+    MESSAGE1=$(git commit -m ":bookmark: Release version: v$NEW_TAG")
     git push
     git tag v$NEW_TAG
     echo "Release version: $NEW_TAG"
     git push --tags
     git checkout develop
     git pull origin/master
+    git push origin/develop
     echo
     echo "$bold Tudo certo! $normal"
 fi
@@ -113,4 +114,3 @@ fi
 rm -rf .tmpDiffs
 echo
 echo "$bold Bye. $normal"
-
