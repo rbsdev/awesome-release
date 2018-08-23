@@ -98,7 +98,8 @@ else
     # echo "SIM"
     # do dangerous stuff
     echo
-    ADD=$(git add CHANGELOG.md package.json)
+    rm -rf .tmpDiffs
+    ADD=$(git add --all)
     MESSAGE1=$(git commit -m ":bookmark: Release version: v$NEW_TAG")
     git push
     git tag v$NEW_TAG
