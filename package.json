@@ -1,6 +1,6 @@
 {
   "name": "awesome-release",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -20,5 +20,8 @@
   "bin": "./run.sh",
   "directories": {
     "lib": "./lib"
+  },
+  "auto-changelog": {
+    "template": "lib/template.hbs"
   }
 }
