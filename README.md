@@ -34,11 +34,12 @@ awesome-release
 ```
 Os passos esperados são
 * Verificar as depenências
-```node    ✔
+```
+node    ✔
 npm    ✔
 git    ✔
 auto-changelog ✔
-cli-md  ✔`
+cli-md  ✔
 ```
 * Checkout para o branch `master`
 * Entrada do branch da qual quer realizar o merge
