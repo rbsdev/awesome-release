@@ -1,6 +1,6 @@
 #!/bin/bash
 # FIRST CHECK PACKAGE
-HAS_PACKAGE_CONFIG=$(cat package.json | grep "auto-changelog" | head -1)
+HAS_PACKAGE_CONFIG=$(cat package.json 2>/dev/null | grep "auto-changelog" | head -1)
 FULL_PATH_BIN="/usr/local/lib/node_modules/awesome-release"
 echo
 set -e
@@ -13,7 +13,7 @@ MASTER_BRANCH='master'
 
 echo "Verificando dependências..."
 echo
-$FULL_PATH_BIN/lib/is_installed.sh
+source $FULL_PATH_BIN/lib/is_installed.sh
 # pwd
 # echo $HAS_PACKAGE_CONFIG
 # echo $FULL_PATH_BIN
@@ -44,8 +44,12 @@ echo $MERGED
 echo
 echo
 echo "__________________________  Tag  _________________________________"
+TAG_PREFIX=v
 LAST_TAG=$(git tag --sort=-creatordate | head -n 1)
-TAG_WITHOUT_PREFIX="${LAST_TAG:1:${#LAST_TAG}}"
+TAG_WITHOUT_PREFIX="${LAST_TAG#${TAG_PREFIX}}"
+if [ $LAST_TAG = $TAG_WITHOUT_PREFIX ]; then
+    TAG_PREFIX=
+fi
 echo
 echo "→ Tag mais recente: $bold $TAG_WITHOUT_PREFIX $normal"
 echo
@@ -61,8 +65,18 @@ echo
 echo "→ Bump Version to $bold $NEW_TAG $normal"
 # echo $(ex -sc '%s/$TAG_WITHOUT_PREFIX/$NEW_TAG/g|xq' package.json)
 
-echo $(perl -pi -e "s/\"version\": \"$TAG_WITHOUT_PREFIX\",/\"version\": \"$NEW_TAG\",/g" package.json)
-
+if [ -f .bumpversion.cfg ] && [ "$(program_is_installed bumpversion)" = 1 ]; then
+    echo "============== .bumpversion.cfg ============="
+    bumpversion --allow-dirty --new-version $NEW_TAG $NEW_TAG
+fi
+if [ -f package-lock.json ]; then
+    echo "============== package-lock.json ============="
+    echo $(perl -pi -e "s/\"version\": \"$TAG_WITHOUT_PREFIX\",/\"version\": \"$NEW_TAG\",/g" package-lock.json)
+fi
+if [ -f package.json ]; then
+    echo "============== package.json ============="
+    echo $(perl -pi -e "s/\"version\": \"$TAG_WITHOUT_PREFIX\",/\"version\": \"$NEW_TAG\",/g" package.json)
+fi
 echo "................$bold OK $normal"
 echo
 echo
@@ -72,10 +86,10 @@ echo "→ Gerando o CHANGELOG.md"
 
 if [ ! "$HAS_PACKAGE_CONFIG" ];then
   # echo "NÃO TEM"
-  CHANGELOG=$(auto-changelog -v v"$NEW_TAG" --template "$FULL_PATH_BIN"/lib/template.hbs -u)
+  CHANGELOG=$(auto-changelog -v "${TAG_PREFIX}${NEW_TAG}" --template "$FULL_PATH_BIN"/lib/template.hbs -u)
 else
   # echo "AQUI TEM"
-  CHANGELOG=$(auto-changelog -v v"$NEW_TAG")
+  CHANGELOG=$(auto-changelog -v "${TAG_PREFIX}${NEW_TAG}")
 fi
 
 
@@ -111,9 +125,9 @@ else
     echo
     rm -rf .tmpDiffs
     ADD=$(git add --all)
-    MESSAGE1=$(git commit -m ":bookmark: Release version: v$NEW_TAG")
+    MESSAGE1=$(git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}")
     git push
-    git tag v$NEW_TAG
+    git tag ${TAG_PREFIX}${NEW_TAG}
     echo "Release version: $NEW_TAG"
     git push --tags
     git checkout develop
