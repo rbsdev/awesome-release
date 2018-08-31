@@ -56,6 +56,11 @@ echo
 echo "Qual a tag vc deseja gerar (sem prefixo)? Ex: 1.2.0: "
 read NEW_TAG
 
+if [ -f tox.ini ]; then
+    echo $dry_run"Running tox"
+    tox -r
+fi
+
 echo
 echo "→ Criando nova tag: $bold $NEW_TAG $normal e aplicando mudanças"
 
