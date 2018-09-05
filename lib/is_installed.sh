@@ -1,5 +1,12 @@
 #!/bin/bash
 
+function print_help {
+  echo "Usage:
+  awesome-release [-h|--help] [-i|--increment major|minor|patch]
+  "
+  exit $1
+}
+
 # Functions ==============================================
 
 # return 1 if global command line program installed, else 0
@@ -11,7 +18,7 @@ function program_is_installed {
   # set to 0 if not found
   type $1 >/dev/null 2>&1 || { local return_=0; }
   # return value
-  echo "$return_"
+  echo $return_
 }
 
 # return 1 if local npm package is installed at ./node_modules, else 0
@@ -58,13 +65,27 @@ function echo_if {
   fi
 }
 
+function test_requirements {
+  command_line_requirements=(\
+    node
+    npm
+    semver
+    git
+    auto-changelog
+    cli-md
+  )
+  count_installed=0
+  count=${#command_line_requirements[*]}
+  for (( i = 0 ; i < count ; i++ ))
+  do
+    installed=$(program_is_installed ${command_line_requirements[$i]})
+    if [ $installed = 1 ]; then
+      count_installed=$(expr $count_installed + 1)
+    fi
+    echo "$(echo_if $installed) ${command_line_requirements[$i]}"
+  done
+  if [ $count_installed -lt $count ]; then
+    return 1
+  fi
+}
 # ============================================== Functions
-
-# command line programs
-echo "node    $(echo_if $(program_is_installed node))"
-echo "npm    $(echo_if $(program_is_installed npm))"
-echo "git    $(echo_if $(program_is_installed git))"
-# local npm packages
-echo "auto-changelog $(echo_if $(program_is_installed auto-changelog))"
-echo "cli-md  $(echo_if $(program_is_installed cli-md))"
-# echo "climd  $(echo_if $(program_is_installed climd))"

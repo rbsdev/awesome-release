@@ -10,20 +10,47 @@ bold=$(tput bold)
 normal=$(tput sgr0)
 
 MASTER_BRANCH='master'
+DEVELOP_BRANCH='develop'
 
-echo "Verificando dependências..."
-echo
 source $FULL_PATH_BIN/lib/is_installed.sh
 # pwd
 # echo $HAS_PACKAGE_CONFIG
 # echo $FULL_PATH_BIN
 
+release_part=
+while true ; do
+    case "$1" in
+    (-h|--help) print_help;;
+    # for options with required arguments, an additional shift is required
+    (-i|--increment)
+        case "$2" in
+        # for options with required arguments, an additional shift is required
+        "major"|"minor"|"patch") release_part=$2;;
+        (*) echo "$0: error - invalid value for -i option $1" 1>&2; print_help 1;;
+        esac
+        shift
+    ;;
+    (--) shift; break;;
+    (-*) echo "$0: error - unrecognized option $1" 1>&2; print_help 1;;
+    (*) break;;
+    esac
+    shift
+done
+
+echo "Verificando dependências..."
+echo
+test_requirements
+if [ $? != 0 ]; then
+  exit $?
+fi
+
 echo
 # echo "Iniciando o processo de release"
 echo "______________ Iniciando o processo de release  __________________"
 echo
-echo "→ Fazendo checkout para $bold master $normal e atualizando"
+echo "→ Fazendo checkout para $bold $MASTER_BRANCH $normal e atualizando"
 echo "......"
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 MASTER=$(git checkout $MASTER_BRANCH)
 PULL=$(git pull origin $MASTER_BRANCH)
 TAGS=$(git fetch --tags)
@@ -33,8 +60,8 @@ echo
 echo "_________________________  Merge  ________________________________"
 
 echo
-read -p "Você quer fazer merge de qual branch? (branch → master) " BRANCH_SOURCE
-BRANCH_SOURCE="${BRANCH_SOURCE:-develop}"
+read -p "Você quer fazer merge de qual branch? (branch → $MASTER_BRANCH) [$DEVELOP_BRANCH] " BRANCH_SOURCE
+BRANCH_SOURCE="${BRANCH_SOURCE:-$DEVELOP_BRANCH}"
 # echo $BRANCH_SOURCE
 
 echo "→ Iniciando merge de: [${BRANCH_SOURCE}]"
@@ -53,8 +80,11 @@ fi
 echo
 echo "→ Tag mais recente: $bold $TAG_WITHOUT_PREFIX $normal"
 echo
-echo "Qual a tag vc deseja gerar (sem prefixo)? Ex: 1.2.0: "
+NEXT_TAG=$(semver -i $release_part $TAG_WITHOUT_PREFIX)
+echo "Qual a tag vc deseja gerar (sem prefixo) [$NEXT_TAG]: "
 read NEW_TAG
+NEW_TAG="${NEW_TAG:-$NEXT_TAG}"
+echo $NEW_TAG
 
 if [ -f tox.ini ]; then
     echo $dry_run"Running tox"
@@ -121,7 +151,8 @@ then
     clear
     echo "Rollback dos arquivos"
     echo
-    git reset --hard
+    git reset --hard origin/$MASTER_BRANCH
+    git checkout $CURRENT_BRANCH
 
 else
     # echo "SIM"
@@ -135,9 +166,9 @@ else
     git tag ${TAG_PREFIX}${NEW_TAG}
     echo "Release version: $NEW_TAG"
     git push --tags
-    git checkout develop
-    git pull origin master
-    git push origin develop
+    git checkout $DEVELOP_BRANCH
+    git pull origin $MASTER_BRANCH
+    git push origin $DEVELOP_BRANCH
     echo
     echo "$bold Tudo certo! $normal"
 fi

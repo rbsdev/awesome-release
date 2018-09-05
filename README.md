@@ -27,6 +27,8 @@ npm install -g
 ```
 
 Para usar:
+ * Ajuda
+ ** awesome-release --help
  * Acessar um repositório `git` e rodar o comando de inicialização
 ```
 cd ~/repositories/projeto/
@@ -35,20 +37,21 @@ awesome-release
 Os passos esperados são
 * Verificar as depenências
 ```
-node    ✔
-npm    ✔
-git    ✔
-auto-changelog ✔
-cli-md  ✔
+✔  node
+✔  npm
+✔  semver
+✔  git
+✔  auto-changelog
+✔  cli-md
 ```
 * Checkout para o branch `master`
 * Entrada do branch da qual quer realizar o merge
-    *Você quer fazer merge de qual branch?*
+    *Você quer fazer merge de qual branch? (branch → master) [default develop]*
 * Merge do branch
 * Feedback da tag mais recente
     *Tag mais recente:  `x.y.z`*
 * Entrada de qual a tag deverá ser fechada
-    *Qual a tag vc deseja gerar (sem prefixo) ex: 1.2.0:*
+    *Qual a tag vc deseja gerar (sem prefixo) [default x.y.z+1]*
 * Gerar o novo CHANGELOG.md
 * Atualizar a versão no `package.json` quando existir
 * Feedback parcial do Changelog
@@ -64,6 +67,7 @@ cli-md  ✔
 | Guilherme Gades | 6481 |
 | Leonardo Souza | 4184 |
 | Robson Scheffer | 4184 |
+| Luis Fernando Gomes | 6370 |
 
 [//]: #
    [df-auto-changelog]: <https://github.com/CookPete/auto-changelog>
