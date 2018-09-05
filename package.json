@@ -17,7 +17,7 @@
     "auto-changelog": "^1.8.0",
     "cli-md": "^1.2.0"
   },
-  "bin": "./run.sh",
+  "bin": "./awesome-release",
   "directories": {
     "lib": "./lib"
   },
