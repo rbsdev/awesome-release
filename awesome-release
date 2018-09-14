@@ -80,7 +80,7 @@ fi
 echo
 echo "→ Tag mais recente: $bold $TAG_WITHOUT_PREFIX $normal"
 echo
-NEXT_TAG=$(semver -i $release_part $TAG_WITHOUT_PREFIX)
+NEXT_TAG=$(semver -i $release_part ${TAG_WITHOUT_PREFIX:-0.0.0})
 echo "Qual a tag vc deseja gerar (sem prefixo) [$NEXT_TAG]: "
 read NEW_TAG
 NEW_TAG="${NEW_TAG:-$NEXT_TAG}"
