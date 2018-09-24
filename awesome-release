@@ -144,7 +144,7 @@ echo    # (optional) move to a new line
 echo
 echo "_________________________  Finish  ______________________________"
 echo
-read -p "BAH! tudo certo pra fechar a tag? (y/n) " -n 1 -r
+read -p "BAH! tudo certo pra fechar a tag? (y/n) [n] " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
