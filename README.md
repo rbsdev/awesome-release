@@ -18,7 +18,7 @@ O projeto AWESOME-RELEASE tem como objetivo:
 
 Clonar o projeto
 ```
-git clone git@gitlab.rbs.com.br:rbsdev/awesome-release.git
+git clone git@github.com:rbsdev/awesome-release.git
 ```
 
 Instalar as dependências como global
@@ -62,12 +62,12 @@ Os passos esperados são
 
 ### Responsáveis
 
-| Responsável | Ramal |
+| Responsável | - |
 | ------ | ------ |
-| Guilherme Gades | 6481 |
-| Leonardo Souza | 4184 |
-| Robson Scheffer | 4184 |
-| Luis Fernando Gomes | 6370 |
+| Guilherme Gades | @ggades |
+| Leonardo Souza | @leonardoss |
+| Robson Scheffer | @ robsonscheffer |
+| Luis Fernando Gomes | @luiscoms |
 
 [//]: #
    [df-auto-changelog]: <https://github.com/CookPete/auto-changelog>
