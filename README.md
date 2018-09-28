@@ -64,11 +64,10 @@ Os passos esperados são
 
 | Responsável | - |
 | ------ | ------ |
-| Guilherme Gades | @ggades |
-| Leonardo Souza | @leonardoss |
-| Robson Scheffer | @ robsonscheffer |
-| Luis Fernando Gomes | @luiscoms |
+| Guilherme Gades | [@ggades](https://github.com/ggades) |
+| Leonardo Souza | [@leonardoss](https://github.com/leonardoss) |
+| Robson Scheffer | [@robsonscheffer](https://github.com/robsonscheffer) |
+| Luis Fernando Gomes | [@luiscoms](https://github.com/luiscoms)  |
 
 [//]: #
    [df-auto-changelog]: <https://github.com/CookPete/auto-changelog>
-
