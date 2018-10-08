@@ -103,8 +103,19 @@ echo "→ Bump Version to $bold $NEW_TAG $normal"
 
 if [ -f .bumpversion.cfg ] && [ "$(program_is_installed bumpversion)" = 1 ]; then
     echo "============== .bumpversion.cfg ============="
-    bumpversion --allow-dirty --new-version $NEW_TAG $NEW_TAG
+    bumpversion --verbose --allow-dirty --new-version $NEW_TAG $NEW_TAG
 fi
+
+if [ -f pom.xml ]; then
+    echo "============== pom.xml ============="
+    if [ -f mvnw ]; then
+        ./mvnw clean package
+    else
+        mvn clean package
+    fi
+    mvn versions:set -DnewVersion=$NEW_TAG
+fi
+
 if [ -f package-lock.json ]; then
     echo "============== package-lock.json ============="
     echo $(perl -pi -e "s/\"version\": \"$TAG_WITHOUT_PREFIX\",/\"version\": \"$NEW_TAG\",/g" package-lock.json)
