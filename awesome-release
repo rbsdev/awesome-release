@@ -116,6 +116,11 @@ if [ -f pom.xml ]; then
     mvn versions:set -DnewVersion=$NEW_TAG
 fi
 
+if [ -f gradle.properties ]; then
+    echo "============== gradle.properties ============="
+    echo $(perl -pi -e "s/project.version=.*/project.version=${NEW_TAG}/g" gradle.properties)
+fi
+
 if [ -f package-lock.json ]; then
     echo "============== package-lock.json ============="
     node -e "var file = require('./package-lock.json'); file.version='"$NEW_TAG"'; require('fs').writeFileSync('./package-lock.json', JSON.stringify(file, null, 2));"

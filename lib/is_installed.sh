@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# check if stdout is a terminal... https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors
+if test -t 1; then
+  # see if it supports colors...
+  ncolors=$(tput colors)
+
+  if test -n "$ncolors" && test $ncolors -ge 8; then
+    bold="$(tput bold)"
+    normal="$(tput sgr0)"
+    red="$(tput setaf 1)"
+    green="$(tput setaf 2)"
+  fi
+fi
+
 function print_help {
   echo "Usage:
   awesome-release [-h|--help] [-i|--increment major|minor|patch]
@@ -37,10 +50,7 @@ function npm_package_is_installed {
 # example
 # echo echo_fail "No"
 function echo_fail {
-  # echo first argument in red
-  printf "\e[31m✘ ${1}"
-  # reset colours back to normal
-  printf "\033\e[0m"
+  echo "${red}✘ ${1}${normal}"
 }
 
 # display a message in green with a tick by it
@@ -48,9 +58,7 @@ function echo_fail {
 # echo echo_fail "Yes"
 function echo_pass {
   # echo first argument in green
-  printf "\e[32m✔ ${1}"
-  # reset colours back to normal
-  printf "\033\e[0m"
+  echo "${green}✔ ${1}${normal}"
 }
 
 # echo pass or fail
@@ -69,22 +77,37 @@ function test_requirements {
   command_line_requirements=(\
     node
     npm
-    semver
     git
+  )
+  node_packages_requirements=(\
+    semver
     auto-changelog
     cli-md
   )
-  count_installed=0
+  count_not_installed=0
+
   count=${#command_line_requirements[*]}
   for (( i = 0 ; i < count ; i++ ))
   do
     installed=$(program_is_installed ${command_line_requirements[$i]})
-    if [ $installed = 1 ]; then
-      count_installed=$(expr $count_installed + 1)
+    if [ $installed = 0 ]; then
+      count_not_installed=$(expr $count_not_installed + 1)
     fi
     echo "$(echo_if $installed) ${command_line_requirements[$i]}"
   done
-  if [ $count_installed -lt $count ]; then
+
+  count=${#node_packages_requirements[*]}
+  for (( i = 0 ; i < count ; i++ ))
+  do
+    installed=$(program_is_installed ${node_packages_requirements[$i]})
+    if [ $installed = 0 ]; then
+      count_not_installed=$(expr $count_not_installed + 1)
+      echo "Install via: ${bold}$ [sudo] npm install -g ${node_packages_requirements[$i]}${normal}"
+    fi
+    echo "$(echo_if $installed) ${node_packages_requirements[$i]}"
+  done
+
+  if [ $count_not_installed -gt 0 ]; then
     return 1
   fi
 }
