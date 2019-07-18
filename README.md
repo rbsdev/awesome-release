@@ -59,6 +59,9 @@ Os passos esperados são
 * `Y`: Commit das mudanças no branch atual, push, cria a tag e publica no `origin`, ao final atualiza a develop
 * `N`: Rollback das mudanças no `changelog` com `git reset --hard`
 
+#### Problemas na hora da instalação
+
+Caso ocorra algum problema com a instalação via npm e permissões <a href="https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally" >siga esse tutorial para reconfigurar o npm.</a>
 
 ### Responsáveis
 
