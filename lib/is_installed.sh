@@ -14,8 +14,14 @@ if test -t 1; then
 fi
 
 function print_help {
-  echo "Usage:
-  awesome-release [-h|--help] [-i|--increment major|minor|patch]
+  echo "Usage: awesome-release [-h|--help]
+   or: awesome-release [<options>] [-i|--increment major|minor|patch]
+   or: awesome-release [<options>] [-r|--remote origin]
+
+Options:
+      -h, --help          This help
+      -i, --increment     Part of version to increment (major|minor|patch, default: patch)
+      -r, --remote        Which remote use to merge (default: origin)
   "
   exit $1
 }
