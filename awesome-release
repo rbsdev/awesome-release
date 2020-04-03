@@ -11,6 +11,7 @@ normal=$(tput sgr0)
 
 MASTER_BRANCH='master'
 DEVELOP_BRANCH='develop'
+ORIGIN_REMOTE=origin
 
 source $FULL_PATH_BIN/lib/is_installed.sh
 # pwd
@@ -28,6 +29,10 @@ while true ; do
         "major"|"minor"|"patch") release_part=$2;;
         (*) echo "$0: error - invalid value for -i option $1" 1>&2; print_help 1;;
         esac
+        shift
+    ;;
+    (-r|--remote)
+        ORIGIN_REMOTE=$2
         shift
     ;;
     (--) shift; break;;
@@ -53,7 +58,7 @@ echo "→ Fazendo checkout para $bold $MASTER_BRANCH $normal e atualizando"
 echo "......"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 MASTER=$(git checkout $MASTER_BRANCH)
-PULL=$(git pull origin $MASTER_BRANCH)
+PULL=$(git pull $ORIGIN_REMOTE $MASTER_BRANCH)
 TAGS=$(git fetch --tags)
 echo "................$bold OK $normal"
 echo
@@ -67,7 +72,7 @@ BRANCH_SOURCE="${BRANCH_SOURCE:-$DEVELOP_BRANCH}"
 
 echo "→ Iniciando merge de: [${BRANCH_SOURCE}]"
 echo
-MERGED=$(git merge origin/$BRANCH_SOURCE)
+MERGED=$(git merge $ORIGIN_REMOTE/$BRANCH_SOURCE)
 echo $MERGED
 echo
 echo
@@ -168,7 +173,7 @@ then
     clear
     echo "Rollback dos arquivos"
     echo
-    git reset --hard origin/$MASTER_BRANCH
+    git reset --hard $ORIGIN_REMOTE/$MASTER_BRANCH
     git checkout $CURRENT_BRANCH
 
 else
@@ -183,8 +188,8 @@ else
     echo "Release version: $NEW_TAG"
     git checkout $DEVELOP_BRANCH
     git merge --no-ff --no-edit ${TAG_PREFIX}${NEW_TAG}
-    git push origin $MASTER_BRANCH --tags
-    git push origin $DEVELOP_BRANCH
+    git push $ORIGIN_REMOTE $MASTER_BRANCH --tags
+    git push $ORIGIN_REMOTE $DEVELOP_BRANCH
     echo
     echo "$bold Tudo certo! $normal"
 fi
