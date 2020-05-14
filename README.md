@@ -31,7 +31,7 @@ Usage:
  ** awesome-release --help
  * Go to a `git` repo to initialize
 ```
-cd ~/repositories/projct/
+cd ~/repositories/project/
 awesome-release
 ```
 Output
