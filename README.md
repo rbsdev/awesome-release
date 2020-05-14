@@ -8,9 +8,8 @@ The objective of AWESOME-RELEASE is:
 - Manage project's changelog
 
 #### Application
- - Desenvolvido como um pacote do `NPM` deve rodar em qualquer ambiente com `NODE` e terminal com `bash`
- - Para automatizar o changelog foi usado o pacote [auto-changelog][df-auto-changelog]
-
+ - Developed as a `NPM` package it should run in any environment with` NODE` and terminal with `bash`
+ - To automate the changelog, package [auto-changelog][df-auto-changelog] was used
 
 #### How to
 ##### Versions
@@ -35,7 +34,7 @@ cd ~/repositories/project/
 awesome-release
 ```
 Output
-* Verificar as depenências
+* Verifying dependencies
 ```
 ✔  node
 ✔  npm
@@ -44,26 +43,27 @@ Output
 ✔  auto-changelog
 ✔  cli-md
 ```
-* Checkout para o branch `master`
+* Checkout branch `master`
 * Entrada do branch da qual quer realizar o merge
-    *Você quer fazer merge de qual branch? (branch → master) [default develop]*
-* Merge do branch
-* Feedback da tag mais recente
-    *Tag mais recente:  `x.y.z`*
+    *From which branch do you want to merge? (branch → master) [default develop]*
+* Initializing merge of: [`develop`]
+* Most recent tag
+    *Last tag:  `x.y.z`*
 * Entrada de qual a tag deverá ser fechada
-    *Qual a tag vc deseja gerar (sem prefixo) [default x.y.z+1]*
-* Gerar o novo CHANGELOG.md
-* Atualizar a versão no `package.json` quando existir
-* Feedback parcial do Changelog
-* Confirmação de seguir com o processo BAH! tudo certo pra fechar a tag? `Y/N`
-* `Y`: Commit das mudanças no branch atual, push, cria a tag e publica no `origin`, ao final atualiza a develop
-* `N`: Rollback das mudanças no `changelog` com `git reset --hard`
+    *Wich tag do you want to release (without prefix) [default x.y.z+1]: *
+* Generate CHANGELOG.md
+* Update `package.json` version if exists
+* CHANGELOG feedback
+* Confirmation
+    *Alright! Release tag? (y/n) [n] *
+* `y`: Commit the changes to the current branch, push, create the tag and publish to `origin`, at the end updates the `develop`
+* `n`: Rollback all changes using `git reset --hard`
 
-#### Problemas na hora da instalação
+#### Problems on instalation
 
-Caso ocorra algum problema com a instalação via npm e permissões <a href="https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally" >siga esse tutorial para reconfigurar o npm.</a>
+If there is a problem with the installation via npm and permissions <a href="https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally" >follow this tutorial to reconfigure npm.</a>
 
-### Responsáveis
+### Main contributors
 
 | Responsável | - |
 | ------ | ------ |
