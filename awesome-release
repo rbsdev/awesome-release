@@ -3,6 +3,9 @@
 HAS_PACKAGE_CONFIG=$(cat package.json 2>/dev/null | grep "auto-changelog" | head -1)
 FULL_PATH_BIN="/usr/local/lib/node_modules/awesome-release"
 echo
+if [ ! -z ${DEBUG} ]; then
+    set -x
+fi
 set -e
 set -o pipefail
 
@@ -72,6 +75,7 @@ BRANCH_SOURCE="${BRANCH_SOURCE:-$DEVELOP_BRANCH}"
 
 echo "→ Iniciando merge de: [${BRANCH_SOURCE}]"
 echo
+git fetch $ORIGIN_REMOTE
 MERGED=$(git merge $ORIGIN_REMOTE/$BRANCH_SOURCE)
 echo $MERGED
 echo
@@ -152,11 +156,9 @@ fi
 
 echo "................$bold OK $normal"
 
-cat CHANGELOG.md | head -40 > .tmpDiffs
 echo
 echo
-cli-md .tmpDiffs
-# echo "OK"
+head -n 25 CHANGELOG.md | cli-md
 echo
 echo
 # ask confirm
@@ -181,7 +183,6 @@ else
     # do dangerous stuff
     clear
     echo
-    rm -rf .tmpDiffs
     ADD=$(git add --all)
     MESSAGE1=$(git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}")
     git tag ${TAG_PREFIX}${NEW_TAG}
@@ -193,7 +194,5 @@ else
     echo
     echo "$bold Tudo certo! $normal"
 fi
-# remove o arquivo temporario
-rm -rf .tmpDiffs
 echo
 echo "$bold Bye. $normal"

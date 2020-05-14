@@ -1,40 +1,40 @@
 # Awesome release
 
-#### O projeto
+#### The Project
 
-O projeto AWESOME-RELEASE tem como objetivo:
-- Automatizar o processo de criação de tags
-- Gerenciamento das versões
-- Gestão do CHANGELOG do projeto
+The objective of AWESOME-RELEASE is:
+- Automate tags creation
+- Manage verions
+- Manage project's changelog
 
-#### A aplicação
+#### Application
  - Desenvolvido como um pacote do `NPM` deve rodar em qualquer ambiente com `NODE` e terminal com `bash`
  - Para automatizar o changelog foi usado o pacote [auto-changelog][df-auto-changelog]
 
 
-#### Como rodar
-##### Versões
+#### How to
+##### Versions
 * Node - > 8.4.0
 
-Clonar o projeto
+Clone project
 ```
 git clone git@github.com:rbsdev/awesome-release.git
 ```
 
-Instalar as dependências como global
+Install global dependencies
 ```
 npm install -g
 ```
 
-Para usar:
- * Ajuda
+Usage:
+ * Help
  ** awesome-release --help
- * Acessar um repositório `git` e rodar o comando de inicialização
+ * Go to a `git` repo to initialize
 ```
-cd ~/repositories/projeto/
+cd ~/repositories/projct/
 awesome-release
 ```
-Os passos esperados são
+Output
 * Verificar as depenências
 ```
 ✔  node
