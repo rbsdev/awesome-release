@@ -203,7 +203,7 @@ else
     git push $ORIGIN_REMOTE $MASTER_BRANCH --tags
     git push $ORIGIN_REMOTE $DEVELOP_BRANCH
     echo
-    echo "$bold Tudo certo! $normal"
+    echo "$bold All right! $normal"
 fi
 echo
 echo "$bold Bye. $normal"
