@@ -4,7 +4,7 @@
 
 The objective of AWESOME-RELEASE is:
 - Automate tags creation
-- Manage verions
+- Manage versions
 - Manage project's changelog
 
 #### Application
@@ -63,9 +63,7 @@ Output
 
 If there is a problem with the installation via npm and permissions <a href="https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally" >follow this tutorial to reconfigure npm.</a>
 
-### Main contributors
-
-| Responsável | - |
+| Main Contributors | - |
 | ------ | ------ |
 | Guilherme Gades | [@ggades](https://github.com/ggades) |
 | Leonardo Souza | [@leonardoss](https://github.com/leonardoss) |
