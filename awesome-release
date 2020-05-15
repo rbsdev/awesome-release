@@ -21,9 +21,12 @@ source $FULL_PATH_BIN/lib/is_installed.sh
 # echo $HAS_PACKAGE_CONFIG
 # echo $FULL_PATH_BIN
 
+yes_to_all=
+
 release_part=
 while true ; do
     case "$1" in
+    (-y|--yes-to-all) yes_to_all=1;;
     (-h|--help) print_help;;
     # for options with required arguments, an additional shift is required
     (-i|--increment)
@@ -46,7 +49,7 @@ while true ; do
     shift
 done
 
-echo "Verificando dependências..."
+echo "Verifying dependencies..."
 echo
 test_requirements
 if [ $? != 0 ]; then
@@ -54,10 +57,9 @@ if [ $? != 0 ]; then
 fi
 
 echo
-# echo "Iniciando o processo de release"
-echo "______________ Iniciando o processo de release  __________________"
+echo "______________ Initializing release proccess  __________________"
 echo
-echo "→ Fazendo checkout para $bold $MASTER_BRANCH $normal e atualizando"
+echo "→ Checkout branch $bold $MASTER_BRANCH $normal"
 echo "......"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 MASTER=$(git checkout $MASTER_BRANCH)
@@ -69,11 +71,14 @@ echo
 echo "_________________________  Merge  ________________________________"
 
 echo
-read -p "Você quer fazer merge de qual branch? (branch → $MASTER_BRANCH) [$DEVELOP_BRANCH] " BRANCH_SOURCE
+echo -n "From which branch do you want to merge? (branch → $MASTER_BRANCH) [$DEVELOP_BRANCH] "
+if [ -z ${yes_to_all} ]; then
+    read BRANCH_SOURCE
+fi
 BRANCH_SOURCE="${BRANCH_SOURCE:-$DEVELOP_BRANCH}"
 # echo $BRANCH_SOURCE
 
-echo "→ Iniciando merge de: [${BRANCH_SOURCE}]"
+echo "→ Initializing merge of: [${BRANCH_SOURCE}]"
 echo
 git fetch $ORIGIN_REMOTE
 MERGED=$(git merge $ORIGIN_REMOTE/$BRANCH_SOURCE)
@@ -88,11 +93,13 @@ if [ $LAST_TAG = $TAG_WITHOUT_PREFIX ]; then
     TAG_PREFIX=
 fi
 echo
-echo "→ Tag mais recente: $bold $TAG_WITHOUT_PREFIX $normal"
+echo "→ Last tag: $bold $TAG_WITHOUT_PREFIX $normal"
 echo
 NEXT_TAG=$(semver -i $release_part ${TAG_WITHOUT_PREFIX:-0.0.0})
-echo "Qual a tag vc deseja gerar (sem prefixo) [$NEXT_TAG]: "
-read NEW_TAG
+echo -n "Wich tag do you want to release (without prefix) [$NEXT_TAG]: "
+if [ -z ${yes_to_all} ]; then
+    read NEW_TAG
+fi
 NEW_TAG="${NEW_TAG:-$NEXT_TAG}"
 echo $NEW_TAG
 
@@ -102,7 +109,7 @@ if [ -f tox.ini ]; then
 fi
 
 echo
-echo "→ Criando nova tag: $bold $NEW_TAG $normal e aplicando mudanças"
+echo "→ Criating new tag: $bold $NEW_TAG $normal and applying changes"
 
 # echo "TAG: $TAG_WITHOUT_PREFIX"
 
@@ -143,7 +150,7 @@ echo
 echo
 echo "________________________  Changelog  _____________________________"
 echo
-echo "→ Gerando o CHANGELOG.md"
+echo "→ Generating CHANGELOG.md"
 
 if [ ! "$HAS_PACKAGE_CONFIG" ];then
   # echo "NÃO TEM"
@@ -167,7 +174,11 @@ echo    # (optional) move to a new line
 echo
 echo "_________________________  Finish  ______________________________"
 echo
-read -p "BAH! tudo certo pra fechar a tag? (y/n) [n] " -n 1 -r
+echo -n "Alright! Release tag? (y/n) [n] "
+REPLY=y
+if [ -z ${yes_to_all} ]; then
+    read -n 1 -r
+fi
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then

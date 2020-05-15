@@ -22,6 +22,7 @@ Options:
       -h, --help          This help
       -i, --increment     Part of version to increment (major|minor|patch, default: patch)
       -r, --remote        Which remote use to merge (default: origin)
+      -y|--yes-to-all     Yes to all responses, it will not ask for confirmation
   "
   exit $1
 }
