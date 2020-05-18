@@ -14,9 +14,9 @@
   "author": "Time Assinaturas",
   "license": "ISC",
   "dependencies": {
-    "auto-changelog": "^1.13.0",
+    "auto-changelog": "^1.16.4",
     "cli-md": "^1.2.0",
-    "semver": "^6.1.2"
+    "semver": "^6.3.0"
   },
   "bin": "./awesome-release",
   "directories": {
