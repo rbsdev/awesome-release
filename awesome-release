@@ -78,7 +78,7 @@ fi
 BRANCH_SOURCE="${BRANCH_SOURCE:-$DEVELOP_BRANCH}"
 # echo $BRANCH_SOURCE
 
-echo "→ Initializing merge of: [${BRANCH_SOURCE}]"
+echo "→ Initializing merge from: [${BRANCH_SOURCE}]"
 echo
 git fetch $ORIGIN_REMOTE
 MERGED=$(git merge $ORIGIN_REMOTE/$BRANCH_SOURCE)
@@ -109,7 +109,7 @@ if [ -f tox.ini ]; then
 fi
 
 echo
-echo "→ Criating new tag: $bold $NEW_TAG $normal and applying changes"
+echo "→ Creating new tag: $bold $NEW_TAG $normal and applying changes"
 
 # echo "TAG: $TAG_WITHOUT_PREFIX"
 
