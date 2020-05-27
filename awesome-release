@@ -21,6 +21,7 @@ source $FULL_PATH_BIN/lib/is_installed.sh
 # echo $HAS_PACKAGE_CONFIG
 # echo $FULL_PATH_BIN
 
+no_test=
 yes_to_all=
 
 release_part=
@@ -41,6 +42,7 @@ while true ; do
         ORIGIN_REMOTE=$2
         shift
     ;;
+    (--no-test) no_test=1;;
     (--) shift; break;;
     (-*) echo "$0: error - unrecognized option $1" 1>&2; print_help 1;;
     ("") break;;
@@ -103,8 +105,8 @@ fi
 NEW_TAG="${NEW_TAG:-$NEXT_TAG}"
 echo $NEW_TAG
 
-if [ -f tox.ini ]; then
-    echo $dry_run"Running tox"
+if [ -z ${no_test} ] && [ -f tox.ini ]; then
+    echo "Running tox"
     tox -r
 fi
 
@@ -124,10 +126,14 @@ fi
 
 if [ -f pom.xml ]; then
     echo "============== pom.xml ============="
+    MVN_OPTS=
+    if [ ! -z ${no_test} ]; then
+        MVN_OPTS=-Dmaven.test.skip=true
+    fi
     if [ -f mvnw ]; then
-        ./mvnw clean package
+        ./mvnw clean package ${MVN_OPTS}
     else
-        mvn clean package
+        mvn clean package ${MVN_OPTS}
     fi
     mvn versions:set -DnewVersion=$NEW_TAG
 fi
@@ -135,6 +141,18 @@ fi
 if [ -f gradle.properties ]; then
     echo "============== gradle.properties ============="
     echo $(perl -pi -e "s/project.version=.*/project.version=${NEW_TAG}/g" gradle.properties)
+fi
+if [ -f build.gradle ]; then
+    GRADLE_OPTS=
+    if [ ! -z ${no_test} ]; then
+        GRADLE_OPTS=-xtest
+    fi
+    echo "============== build.gradle ============="
+    if [ -f gradlew ]; then
+        ./gradlew build ${GRADLE_OPTS}
+    else
+        gradle build ${GRADLE_OPTS}
+    fi
 fi
 
 if [ -f package-lock.json ]; then
