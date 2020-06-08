@@ -119,9 +119,9 @@ echo
 echo "→ Bump Version to $bold $NEW_TAG $normal"
 # echo $(ex -sc '%s/$TAG_WITHOUT_PREFIX/$NEW_TAG/g|xq' package.json)
 
-if [ -f .bumpversion.cfg ] && [ "$(program_is_installed bumpversion)" = 1 ]; then
+if [ -f .bumpversion.cfg ] && [ "$(program_is_installed bump2version)" = 1 ]; then
     echo "============== .bumpversion.cfg ============="
-    bumpversion --verbose --allow-dirty --new-version $NEW_TAG $NEW_TAG
+    bump2version --verbose --allow-dirty --new-version $NEW_TAG $NEW_TAG
 fi
 
 if [ -f pom.xml ]; then
