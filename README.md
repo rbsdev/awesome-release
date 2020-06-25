@@ -44,18 +44,18 @@ Output
 ✔  cli-md
 ```
 * Checkout branch `master`
-* Entrada do branch da qual quer realizar o merge
-    *From which branch do you want to merge? (branch → master) [default develop]*
+* Branch input you want to merge from
+>    From which branch do you want to merge? (branch → master) [default develop]
 * Initializing merge of: [`develop`]
 * Most recent tag
-    *Last tag:  `x.y.z`*
-* Entrada de qual a tag deverá ser fechada
-    *Wich tag do you want to release (without prefix) [default x.y.z+1]: *
+> Last tag:  `x.y.z`
+* Entry of which tag can be released
+> Wich tag do you want to release (without prefix) [default x.y.z+1]:
 * Generate CHANGELOG.md
 * Update `package.json` version if exists
 * CHANGELOG feedback
 * Confirmation
-    *Alright! Release tag? (y/n) [n] *
+> Alright! Release tag? (y/n) [n]
 * `y`: Commit the changes to the current branch, push, create the tag and publish to `origin`, at the end updates the `develop`
 * `n`: Rollback all changes using `git reset --hard`
 
