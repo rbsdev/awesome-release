@@ -155,13 +155,8 @@ if [ -f build.gradle ]; then
     fi
 fi
 
-if [ -f package-lock.json ]; then
-    echo "============== package-lock.json ============="
-    node -e "var file = require('./package-lock.json'); file.version='"$NEW_TAG"'; require('fs').writeFileSync('./package-lock.json', JSON.stringify(file, null, 2));"
-fi
 if [ -f package.json ]; then
-    echo "============== package.json ============="
-    echo $(perl -pi -e "s/\"version\": \"$TAG_WITHOUT_PREFIX\",/\"version\": \"$NEW_TAG\",/g" package.json)
+    npm --no-git-tag-version version $NEW_TAG
 fi
 echo "................$bold OK $normal"
 echo
