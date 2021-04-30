@@ -58,7 +58,7 @@ You will receive the following output:
 Example:
 > From which branch do you want to merge? (branch → master) [default develop]
 * After confirming, it will initialize the merge of: `develop` into `master`
-* Afte successfully mergig, it shows the most recent tag.
+* Afte successfully merging, it shows the most recent tag.
 
 Example:
 > Last tag:  `1.0.0`
@@ -66,8 +66,8 @@ Example:
 
 Example:
 > Wich tag do you want to release (without prefix) [default 1.0.1]:
-* After confirming the tag it will generate CHANGELOG.md
-* Update `package.json` version if exists
+* After confirming the tag it will generate the CHANGELOG.md file
+* Automatically updates the `package.json` version if exists
 * Gives you the CHANGELOG preview and asks if is everything ok
 
 Example:
@@ -75,11 +75,11 @@ Example:
 * `y`: Commit the changes to the current branch, push, create the tag and publish to `origin`. At the end it updates the `develop` branch.
 * `n`: Rollback all changes using `git reset --hard`.
 
-If you need help, in your terminal type  `awesome-release --help`.
+If you need help, just type  `awesome-release --help`.
 
 ### Problems on installation
 
-If there is a problem with the installation via npm and permissions <a href="https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally" >follow this tutorial to reconfigure npm.</a> This is a commom issue for Linux users.
+If there is a problem with the installation via npm and permissions <a href="https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally" >follow this tutorial to reconfigure npm.</a> This is a common issue for Linux users.
 
 Aditionally, if you have issues runnning the **awesome-release** command (command not found, etc), open the `./awesome-release` file in the repo that you cloned to your machine and update the `FULL_PATH_BIN` variable to something like:
 
