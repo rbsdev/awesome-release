@@ -140,9 +140,9 @@ fi
 
 if [ -f gradle.properties ]; then
     echo "============== gradle.properties ============="
-    echo $(perl -pi -e "s/project.version=.*/project.version=${NEW_TAG}/g" gradle.properties)
+    echo $(perl -pi -e "s/version=.*/version=${NEW_TAG}/g" gradle.properties)
 fi
-if [ -f build.gradle ]; then
+if [ -f build.gradle ] || [ -f build.gradle.kts ]; then
     GRADLE_OPTS=
     if [ ! -z ${no_test} ]; then
         GRADLE_OPTS=-xtest
