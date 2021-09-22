@@ -98,3 +98,13 @@ Save it and run `npm install -g` again.
 
 [//]: #
    [df-auto-changelog]: <https://github.com/CookPete/auto-changelog>
+
+## Change default branches
+
+    MASTER_BRANCH=main awesome-release
+
+    DEVELOP_BRANCH=dev awesome-release
+
+## Change default remote
+
+    ORIGIN_REMOTE=another-origin awesome-release

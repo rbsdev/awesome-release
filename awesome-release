@@ -12,9 +12,9 @@ set -o pipefail
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-MASTER_BRANCH='master'
-DEVELOP_BRANCH='develop'
-ORIGIN_REMOTE=origin
+MASTER_BRANCH=${MASTER_BRANCH:-master}
+DEVELOP_BRANCH=${DEVELOP_BRANCH:-develop}
+ORIGIN_REMOTE=${ORIGIN_REMOTE:-origin}
 
 source $FULL_PATH_BIN/lib/is_installed.sh
 # pwd
@@ -65,8 +65,11 @@ echo "→ Checkout branch $bold $MASTER_BRANCH $normal"
 echo "......"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 MASTER=$(git checkout $MASTER_BRANCH)
-PULL=$(git pull $ORIGIN_REMOTE $MASTER_BRANCH)
-TAGS=$(git fetch --tags)
+if [ `git ls-remote --heads origin $MASTER_BRANCH | wc -l` -gt 0 ]; then
+    echo "Pulling from $MASTER_BRANCH"
+    git pull $ORIGIN_REMOTE $MASTER_BRANCH
+fi
+git fetch --tags
 echo "................$bold OK $normal"
 echo
 echo
