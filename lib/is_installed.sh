@@ -17,11 +17,14 @@ function print_help {
   echo "Usage: awesome-release [-h|--help]
    or: awesome-release [<options>] [-i|--increment major|minor|patch]
    or: awesome-release [<options>] [-r|--remote origin]
+   or: MASTER_BRANCH=main awesome-release [<options>] [-r|--remote origin]
 
 Options:
       -h, --help          This help
       -i, --increment     Part of version to increment (major|minor|patch, default: patch)
       -r, --remote        Which remote use to merge (default: origin)
+      -s, --short-tags    Generate short tags, major and minor tags as well
+      -d, --dry run
       -y|--yes-to-all     Yes to all responses, it will not ask for confirmation
       -no-test            Skip running tests
   "
@@ -47,9 +50,10 @@ function program_is_installed {
 # echo "gruntacular : $(npm_package_is_installed gruntacular)"
 function npm_package_is_installed {
   # set to 1 initially
+
   local return_=1
   # set to 0 if not found
-  ls node_modules | grep $1 >/dev/null 2>&1 || { local return_=0; }
+  ls $(dirname $(realpath $0))/node_modules | grep $1 >/dev/null 2>&1 || { local return_=0; }
   # return value
   echo "$return_"
 }
@@ -107,7 +111,7 @@ function test_requirements {
   count=${#node_packages_requirements[*]}
   for (( i = 0 ; i < count ; i++ ))
   do
-    installed=$(program_is_installed ${node_packages_requirements[$i]})
+    installed=$(npm_package_is_installed ${node_packages_requirements[$i]})
     if [ $installed = 0 ]; then
       count_not_installed=$(expr $count_not_installed + 1)
       echo "Install via: ${bold}$ [sudo] npm install -g ${node_packages_requirements[$i]}${normal}"
