@@ -16,6 +16,8 @@ MASTER_BRANCH=${MASTER_BRANCH:-master}
 DEVELOP_BRANCH=${DEVELOP_BRANCH:-develop}
 ORIGIN_REMOTE=${ORIGIN_REMOTE:-origin}
 
+DEFAULT_INITIAL_VERSION=${DEFAULT_INITIAL_VERSION:-0.0.0}
+
 source $FULL_PATH_BIN/lib/is_installed.sh
 # pwd
 # echo $HAS_PACKAGE_CONFIG
@@ -23,11 +25,15 @@ source $FULL_PATH_BIN/lib/is_installed.sh
 
 no_test=
 yes_to_all=
+short_tags=
+dry_run=
 
 release_part=
 while true ; do
     case "$1" in
     (-y|--yes-to-all) yes_to_all=1;;
+    (-s|--short-tags) short_tags=1;;
+    (-d|--dry-run) dry_run=1;;
     (-h|--help) print_help;;
     # for options with required arguments, an additional shift is required
     (-i|--increment)
@@ -58,6 +64,12 @@ if [ $? != 0 ]; then
   exit $?
 fi
 
+if ! [ $(git branch -la --format "%(refname:short)" ${ORIGIN_REMOTE}/$MASTER_BRANCH) ]; then
+    echo
+    echo "$MASTER_BRANCH branch not found, did you men main?"
+    echo
+    print_help 1
+fi
 echo
 echo "______________ Initializing release proccess  __________________"
 echo
@@ -65,7 +77,7 @@ echo "→ Checkout branch $bold $MASTER_BRANCH $normal"
 echo "......"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 MASTER=$(git checkout $MASTER_BRANCH)
-if [ `git ls-remote --heads origin $MASTER_BRANCH | wc -l` -gt 0 ]; then
+if [ `git ls-remote --heads $ORIGIN_REMOTE $MASTER_BRANCH | wc -l` -gt 0 ]; then
     echo "Pulling from $MASTER_BRANCH"
     git pull $ORIGIN_REMOTE $MASTER_BRANCH
 fi
@@ -100,13 +112,26 @@ fi
 echo
 echo "→ Last tag: $bold $TAG_WITHOUT_PREFIX $normal"
 echo
-NEXT_TAG=$(semver -i $release_part ${TAG_WITHOUT_PREFIX:-0.0.0})
+NEXT_TAG=$(semver -i $release_part ${TAG_WITHOUT_PREFIX:-${DEFAULT_INITIAL_VERSION}} || echo ${DEFAULT_INITIAL_VERSION})
+
 echo -n "Wich tag do you want to release (without prefix) [$NEXT_TAG]: "
 if [ -z ${yes_to_all} ]; then
     read NEW_TAG
 fi
 NEW_TAG="${NEW_TAG:-$NEXT_TAG}"
-echo $NEW_TAG
+echo "New tag: "$NEW_TAG
+NEW_MAJOR=$(echo $NEW_TAG | cut -d '.'  -f1)
+NEW_MINOR=$(echo $NEW_TAG | cut -d '.'  -f2)
+echo "New Major: "$NEW_MAJOR
+echo "New Minor: "$NEW_MINOR
+
+if [ -z ${short_tags} ]; then
+    echo -n "Do you want to generate short tags ${TAG_PREFIX}${NEW_MAJOR} and ${TAG_PREFIX}${NEW_MAJOR}.$NEW_MINOR? (y/n) [n]: "
+    read -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        short_tags=1
+    fi
+fi
 
 if [ -z ${no_test} ] && [ -f tox.ini ]; then
     echo "Running tox"
@@ -204,20 +229,34 @@ then
     echo
     git reset --hard $ORIGIN_REMOTE/$MASTER_BRANCH
     git checkout $CURRENT_BRANCH
-
 else
     # echo "SIM"
     # do dangerous stuff
     clear
     echo
     ADD=$(git add --all)
-    MESSAGE1=$(git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}")
-    git tag ${TAG_PREFIX}${NEW_TAG}
-    echo "Release version: $NEW_TAG"
-    git checkout $DEVELOP_BRANCH
-    git merge --no-ff --no-edit ${TAG_PREFIX}${NEW_TAG}
-    git push $ORIGIN_REMOTE $MASTER_BRANCH --tags
-    git push $ORIGIN_REMOTE $DEVELOP_BRANCH
+    if [ -z ${dry_run} ]; then
+        git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}"
+    else
+        git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}" --dry-run
+    fi
+
+    if [ -z ${dry_run} ] && [ ! -z ${short_tags} ]; then
+        git tag -f ${TAG_PREFIX}${NEW_MAJOR}
+        git tag -f ${TAG_PREFIX}${NEW_MAJOR}.$NEW_MINOR
+    fi
+    if [ -z ${dry_run} ]; then
+        git tag ${TAG_PREFIX}${NEW_TAG}
+        echo "Release version: $NEW_TAG"
+        git checkout $DEVELOP_BRANCH
+        git merge --no-ff --no-edit ${TAG_PREFIX}${NEW_TAG}
+        git push $ORIGIN_REMOTE $MASTER_BRANCH --tags --force
+        git push $ORIGIN_REMOTE $DEVELOP_BRANCH
+    else
+        git reset --hard $ORIGIN_REMOTE/$MASTER_BRANCH
+        git checkout $CURRENT_BRANCH
+    fi
+
     echo
     echo "$bold All right! $normal"
 fi
