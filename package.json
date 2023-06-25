@@ -16,7 +16,7 @@
   "dependencies": {
     "auto-changelog": "^1.16.4",
     "cli-md": "^1.2.0",
-    "semver": "^6.3.0"
+    "semver": "^7.5.2"
   },
   "bin": "./awesome-release",
   "directories": {
