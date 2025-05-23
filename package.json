@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.rbs.com.br:rbsdev/awesome-release.git"
+    "url": "https://github.com/rbsdev/awesome-release.git"
   },
-  "author": "Time Assinaturas",
+  "author": "Núcleo Digital - Grupo RBS",
   "license": "ISC",
   "dependencies": {
-    "auto-changelog": "^1.16.4",
+    "auto-changelog": "^2.5.0",
     "cli-md": "^1.2.0",
-    "semver": "^6.3.0"
+    "semver": "^7.7.2"
   },
   "bin": "./awesome-release",
   "directories": {
