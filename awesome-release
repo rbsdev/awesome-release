@@ -12,7 +12,7 @@ set -o pipefail
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-MASTER_BRANCH=${MASTER_BRANCH:-master}
+MASTER_BRANCH_FROM_ENV=${MASTER_BRANCH}
 DEVELOP_BRANCH=${DEVELOP_BRANCH:-develop}
 ORIGIN_REMOTE=${ORIGIN_REMOTE:-origin}
 
@@ -64,9 +64,26 @@ if [ $? != 0 ]; then
   exit $?
 fi
 
-if ! [ $(git branch -la --format "%(refname:short)" ${ORIGIN_REMOTE}/$MASTER_BRANCH) ]; then
+branch_exists() {
+    [ -n "$(git branch -la --format "%(refname:short)" "${ORIGIN_REMOTE}/$1")" ]
+}
+
+if [ -n "${MASTER_BRANCH_FROM_ENV}" ]; then
+    MASTER_BRANCH=${MASTER_BRANCH_FROM_ENV}
+    if ! branch_exists "$MASTER_BRANCH"; then
+        echo
+        echo "$MASTER_BRANCH branch not found on ${ORIGIN_REMOTE}"
+        echo
+        print_help 1
+    fi
+elif branch_exists master; then
+    MASTER_BRANCH=master
+elif branch_exists main; then
+    MASTER_BRANCH=main
+    echo "master branch not found, using $bold main $normal"
+else
     echo
-    echo "$MASTER_BRANCH branch not found, did you men main?"
+    echo "Neither master nor main branch found on ${ORIGIN_REMOTE}"
     echo
     print_help 1
 fi
