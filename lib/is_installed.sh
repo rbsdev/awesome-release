@@ -42,7 +42,11 @@ function npm_package_is_installed {
 
   local return_=1
   # set to 0 if not found
-  ls "$FULL_PATH_BIN"/node_modules | grep $1 >/dev/null 2>&1 || { local return_=0; }
+  # the script calls these packages as commands, so a global install in PATH counts;
+  # a clone installed with `npm install -g` is only symlinked and has no node_modules
+  type $1 >/dev/null 2>&1 \
+    || ls "$FULL_PATH_BIN"/node_modules 2>/dev/null | grep $1 >/dev/null 2>&1 \
+    || { local return_=0; }
   # return value
   echo "$return_"
 }
