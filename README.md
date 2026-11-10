@@ -26,11 +26,45 @@ Clone the project
 git clone git@github.com:rbsdev/awesome-release.git
 ```
 
-Install all dependencies as global
+Install all dependencies as global. awesome-release finds its own install folder, so it works with a standard Node installation and with [nvm](https://github.com/nvm-sh/nvm).
+
+##### Standard Node
 ```
 cd awesome-release
 npm install -g
 ```
+Depending on how Node was installed, this may require `sudo`.
+
+##### nvm
+```
+cd awesome-release
+nvm use <version>
+npm install -g
+```
+Don't use `sudo` with nvm. Global packages in nvm belong to one Node version: after switching versions, run `npm install -g` again, or install the new version with `nvm install <new> --reinstall-packages-from=<old>`.
+
+### Update
+
+If awesome-release is already installed, run the updater from your clone. It finds the installation (standard Node or nvm), updates the clone and reinstalls the command, showing the new interface (banner, steps and summary) even when coming from an old version.
+
+Versions that already have `update.sh`:
+```
+cd awesome-release
+./update.sh
+```
+
+Older versions (without `update.sh`), run the updater straight from the remote, without `git pull`:
+```
+cd awesome-release
+git fetch
+bash <(git show origin/master:update.sh)
+```
+
+Options:
+* `--ref <branch|tag>`: version to update to (default: `master`, or `main` if `master` doesn't exist).
+* `--source <dir>`: clone to update, when it can't be found automatically.
+
+The updater stops if the clone has local changes; save them with `git stash` first. With nvm, run it with the same Node version where awesome-release is installed.
 
 ### How to use
 
@@ -41,37 +75,48 @@ Go to a `git` repo to initialize:
 cd ~/repositories/project/
 awesome-release
 ```
-You will receive the following output:
-* Verifying dependencies
+The release runs in 7 numbered steps (Dependencies, Checkout, Merge, Tag, Bump version, Changelog, Release), with a spinner while git and auto-changelog work and a summary at the end:
 ```
-✔  node
-✔  npm
-✔  semver
-✔  git
-✔  auto-changelog
-✔  cli-md
+    __ _ __      __  ___  ___   ___   _ __ ___    ___
+   / _` |\ \ /\ / / / _ \/ __| / _ \ | '_ ` _ \  / _ \
+  | (_| | \ V  V / |  __/\__ \| (_) || | | | | ||  __/
+   \__,_|  \_/\_/   \___||___/ \___/ |_| |_| |_| \___|
+                            _
+                _ __   ___ | |  ___   __ _  ___   ___
+               | '__| / _ \| | / _ \ / _` |/ __| / _ \
+               | |   |  __/| ||  __/| (_| |\__ \|  __/
+               |_|    \___||_| \___| \__,_||___/ \___|
+
+  tag · merge · changelog                       v1.7.0
+  repo: project · remote: origin
+
+  [1/7] Dependencies
+    ✔ node  ✔ npm  ✔ git  ✔ semver  ✔ auto-changelog  ✔ cli-md
 ```
-* This output shows if you have all necessary dependencies and all of them are ok.
-* awesome-release will automatically checkout to `master` branch.
+* The first step shows if you have all necessary dependencies and all of them are ok. A missing one is listed with the command to install it.
+* The banner is drawn in one line on terminals with 100+ columns, in two lines from 56 columns, and replaced by a compact header on narrower terminals. Set `AWESOME_RELEASE_BANNER=0` to always use the compact header.
+* Colors and the spinner are only used in an interactive terminal; piped or CI output is plain text. Set `NO_COLOR=1` to disable colors.
+* If a command fails (a merge conflict, for example), awesome-release shows its output and stops.
+* awesome-release will automatically checkout to `master` branch (or `main`, if `master` doesn't exist on the remote).
 * Next, it will ask you from what branch do you want to merge the code (`develop` is the default branch).
 
 Example:
-> From which branch do you want to merge? (branch → master) [default develop]
+> ? Merge from which branch into master? (develop) ›
 * After confirming, it will initialize the merge of: `develop` into `master`
 * Afte successfully merging, it shows the most recent tag.
 
 Example:
-> Last tag:  `1.0.0`
+> Last tag   v1.0.0
 * You can manually enter the new tag that will be created. Optionally you can just press `ENTER` to release a minor version (awesome-release always suggest you the next minor version to be released).
 
 Example:
-> Wich tag do you want to release (without prefix) [default 1.0.1]:
+> ? Which tag do you want to release (without prefix)? (1.0.1) ›
 * After confirming the tag it will generate the CHANGELOG.md file
 * Automatically updates the `package.json` version if exists
 * Gives you the CHANGELOG preview and asks if is everything ok
 
 Example:
-> Alright! Release tag? (y/n) [n]
+> ? Alright! Release tag v1.0.1? (y/N)
 * `y`: Commit the changes to the current branch, push, create the tag and publish to `origin`. At the end it updates the `develop` branch.
 * `n`: Rollback all changes using `git reset --hard`.
 
@@ -81,11 +126,9 @@ If you need help, just type  `awesome-release --help`.
 
 If there is a problem with the installation via npm and permissions <a href="https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally" >follow this tutorial to reconfigure npm.</a> This is a common issue for Linux users.
 
-Aditionally, if you have issues runnning the **awesome-release** command (command not found, etc), open the `./awesome-release` file in the repo that you cloned to your machine and update the `FULL_PATH_BIN` variable to something like:
+awesome-release detects its install folder automatically. If it can't find its files (`awesome-release files not found in ...`), point it to the installed package with `AWESOME_RELEASE_HOME`:
 
-`/home/$USER/.npm-global/lib/node_modules/awesome-release`
-
-Save it and run `npm install -g` again.
+    AWESOME_RELEASE_HOME=/home/$USER/.npm-global/lib/node_modules/awesome-release awesome-release
 
 
 | Main Contributors | - |
@@ -100,6 +143,8 @@ Save it and run `npm install -g` again.
    [df-auto-changelog]: <https://github.com/CookPete/auto-changelog>
 
 ## Change default branches
+
+Without `MASTER_BRANCH`, awesome-release uses `master` and falls back to `main` when `master` doesn't exist on the remote. Set it to force a specific branch:
 
     MASTER_BRANCH=main awesome-release
 
