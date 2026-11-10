@@ -1,25 +1,14 @@
 #!/bin/bash
 
-# check if stdout is a terminal... https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors
-if test -t 1; then
-  # see if it supports colors...
-  ncolors=$(tput colors)
-
-  if test -n "$ncolors" && test $ncolors -ge 8; then
-    bold="$(tput bold)"
-    normal="$(tput sgr0)"
-    red="$(tput setaf 1)"
-    green="$(tput setaf 2)"
-  fi
-fi
+# Colors and icons come from lib/ui.sh, sourced before this file.
 
 function print_help {
-  echo "Usage: awesome-release [-h|--help]
+  echo "${bold}Usage:${normal} awesome-release [-h|--help]
    or: awesome-release [<options>] [-i|--increment major|minor|patch]
    or: awesome-release [<options>] [-r|--remote origin]
    or: MASTER_BRANCH=main awesome-release [<options>] [-r|--remote origin]
 
-Options:
+${bold}Options:${normal}
       -h, --help          This help
       -i, --increment     Part of version to increment (major|minor|patch, default: patch)
       -r, --remote        Which remote use to merge (default: origin)
@@ -60,23 +49,22 @@ function npm_package_is_installed {
 
 # display a message in red with a cross by it
 # example
-# echo echo_fail "No"
+# echo_fail "No"
 function echo_fail {
-  echo "${red}✘ ${1}${normal}"
+  echo "${red}✘${normal} ${1}"
 }
 
 # display a message in green with a tick by it
 # example
-# echo echo_fail "Yes"
+# echo_pass "Yes"
 function echo_pass {
-  # echo first argument in green
-  echo "${green}✔ ${1}${normal}"
+  echo "${green}✔${normal} ${1}"
 }
 
 # echo pass or fail
 # example
-# echo echo_if 1 "Passed"
-# echo echo_if 0 "Failed"
+# echo_if 1 "Passed"
+# echo_if 0 "Failed"
 function echo_if {
   if [ $1 == 1 ]; then
     echo_pass $2
@@ -97,29 +85,29 @@ function test_requirements {
     cli-md
   )
   count_not_installed=0
+  local summary= hints= name installed
 
-  count=${#command_line_requirements[*]}
-  for (( i = 0 ; i < count ; i++ ))
-  do
-    installed=$(program_is_installed ${command_line_requirements[$i]})
+  for name in "${command_line_requirements[@]}"; do
+    installed=$(program_is_installed $name)
     if [ $installed = 0 ]; then
       count_not_installed=$(expr $count_not_installed + 1)
     fi
-    echo "$(echo_if $installed) ${command_line_requirements[$i]}"
+    summary+="$(echo_if $installed $name)  "
   done
 
-  count=${#node_packages_requirements[*]}
-  for (( i = 0 ; i < count ; i++ ))
-  do
-    installed=$(npm_package_is_installed ${node_packages_requirements[$i]})
+  for name in "${node_packages_requirements[@]}"; do
+    installed=$(npm_package_is_installed $name)
     if [ $installed = 0 ]; then
       count_not_installed=$(expr $count_not_installed + 1)
-      echo "Install via: ${bold}$ [sudo] npm install -g ${node_packages_requirements[$i]}${normal}"
+      hints+="    ${red}✘${normal} ${name}  ${dim}→${normal} ${bold}[sudo] npm install -g ${name}${normal}"$'\n'
     fi
-    echo "$(echo_if $installed) ${node_packages_requirements[$i]}"
+    summary+="$(echo_if $installed $name)  "
   done
 
+  echo "    ${summary}"
   if [ $count_not_installed -gt 0 ]; then
+    echo
+    printf '%s' "$hints"
     return 1
   fi
 }
