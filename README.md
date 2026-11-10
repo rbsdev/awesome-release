@@ -52,37 +52,37 @@ Go to a `git` repo to initialize:
 cd ~/repositories/project/
 awesome-release
 ```
-You will receive the following output:
-* Verifying dependencies
+The release runs in 7 numbered steps (Dependencies, Checkout, Merge, Tag, Bump version, Changelog, Release), with a spinner while git and auto-changelog work and a summary at the end:
 ```
-✔  node
-✔  npm
-✔  semver
-✔  git
-✔  auto-changelog
-✔  cli-md
+  ◆ awesome-release  v1.7.0
+  repo: project · remote: origin
+
+  [1/7] Dependencies
+    ✔ node  ✔ npm  ✔ git  ✔ semver  ✔ auto-changelog  ✔ cli-md
 ```
-* This output shows if you have all necessary dependencies and all of them are ok.
+* The first step shows if you have all necessary dependencies and all of them are ok. A missing one is listed with the command to install it.
+* Colors and the spinner are only used in an interactive terminal; piped or CI output is plain text. Set `NO_COLOR=1` to disable colors.
+* If a command fails (a merge conflict, for example), awesome-release shows its output and stops.
 * awesome-release will automatically checkout to `master` branch (or `main`, if `master` doesn't exist on the remote).
 * Next, it will ask you from what branch do you want to merge the code (`develop` is the default branch).
 
 Example:
-> From which branch do you want to merge? (branch → master) [default develop]
+> ? Merge from which branch into master? (develop) ›
 * After confirming, it will initialize the merge of: `develop` into `master`
 * Afte successfully merging, it shows the most recent tag.
 
 Example:
-> Last tag:  `1.0.0`
+> Last tag   v1.0.0
 * You can manually enter the new tag that will be created. Optionally you can just press `ENTER` to release a minor version (awesome-release always suggest you the next minor version to be released).
 
 Example:
-> Wich tag do you want to release (without prefix) [default 1.0.1]:
+> ? Which tag do you want to release (without prefix)? (1.0.1) ›
 * After confirming the tag it will generate the CHANGELOG.md file
 * Automatically updates the `package.json` version if exists
 * Gives you the CHANGELOG preview and asks if is everything ok
 
 Example:
-> Alright! Release tag? (y/n) [n]
+> ? Alright! Release tag v1.0.1? (y/N)
 * `y`: Commit the changes to the current branch, push, create the tag and publish to `origin`. At the end it updates the `develop` branch.
 * `n`: Rollback all changes using `git reset --hard`.
 
