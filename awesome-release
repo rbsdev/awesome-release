@@ -1,27 +1,33 @@
 #!/bin/bash
 # FIRST CHECK PACKAGE
 HAS_PACKAGE_CONFIG=$(cat package.json 2>/dev/null | grep "auto-changelog" | head -1)
-FULL_PATH_BIN="/usr/local/lib/node_modules/awesome-release"
-echo
+# Resolve the bin symlink to find the package folder (standard node, nvm, npm link)
+resolve_self() {
+    realpath "$0" 2>/dev/null \
+        || readlink -f "$0" 2>/dev/null \
+        || node -e 'console.log(require("fs").realpathSync(process.argv[1]))' "$0"
+}
+FULL_PATH_BIN=${AWESOME_RELEASE_HOME:-$(dirname "$(resolve_self)")}
 if [ ! -z ${DEBUG} ]; then
     set -x
 fi
 set -e
 set -o pipefail
 
-bold=$(tput bold)
-normal=$(tput sgr0)
-
-MASTER_BRANCH=${MASTER_BRANCH:-master}
+MASTER_BRANCH_FROM_ENV=${MASTER_BRANCH}
 DEVELOP_BRANCH=${DEVELOP_BRANCH:-develop}
 ORIGIN_REMOTE=${ORIGIN_REMOTE:-origin}
 
 DEFAULT_INITIAL_VERSION=${DEFAULT_INITIAL_VERSION:-0.0.0}
 
-source $FULL_PATH_BIN/lib/is_installed.sh
-# pwd
-# echo $HAS_PACKAGE_CONFIG
-# echo $FULL_PATH_BIN
+for lib_file in ui.sh is_installed.sh; do
+    if [ ! -f "$FULL_PATH_BIN/lib/$lib_file" ]; then
+        echo "awesome-release files not found in $FULL_PATH_BIN. Set AWESOME_RELEASE_HOME."
+        exit 1
+    fi
+done
+source "$FULL_PATH_BIN/lib/ui.sh"
+source "$FULL_PATH_BIN/lib/is_installed.sh"
 
 no_test=
 yes_to_all=
@@ -57,103 +63,101 @@ while true ; do
     shift
 done
 
-echo "Verifying dependencies..."
-echo
-test_requirements
-if [ $? != 0 ]; then
-  exit $?
-fi
+ui_header
 
-if ! [ $(git branch -la --format "%(refname:short)" ${ORIGIN_REMOTE}/$MASTER_BRANCH) ]; then
+# ── 1. Dependencies ────────────────────────────────────────────────
+ui_step 1 "Dependencies"
+test_requirements || exit 1
+
+branch_exists() {
+    [ -n "$(git branch -la --format "%(refname:short)" "${ORIGIN_REMOTE}/$1")" ]
+}
+
+if [ -n "${MASTER_BRANCH_FROM_ENV}" ]; then
+    MASTER_BRANCH=${MASTER_BRANCH_FROM_ENV}
+    if ! branch_exists "$MASTER_BRANCH"; then
+        echo
+        ui_error "$MASTER_BRANCH branch not found on ${ORIGIN_REMOTE}"
+        echo
+        print_help 1
+    fi
+elif branch_exists master; then
+    MASTER_BRANCH=master
+elif branch_exists main; then
+    MASTER_BRANCH=main
+else
     echo
-    echo "$MASTER_BRANCH branch not found, did you men main?"
+    ui_error "Neither master nor main branch found on ${ORIGIN_REMOTE}"
     echo
     print_help 1
 fi
-echo
-echo "______________ Initializing release proccess  __________________"
-echo
-echo "→ Checkout branch $bold $MASTER_BRANCH $normal"
-echo "......"
+
+# ── 2. Checkout ────────────────────────────────────────────────────
+ui_step 2 "Checkout ${MASTER_BRANCH}"
+if [ "$MASTER_BRANCH" = main ] && [ -z "${MASTER_BRANCH_FROM_ENV}" ]; then
+    ui_warn "master branch not found, using ${bold}main${normal}"
+fi
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-MASTER=$(git checkout $MASTER_BRANCH)
+ui_run "Checkout $MASTER_BRANCH" git checkout $MASTER_BRANCH
 if [ `git ls-remote --heads $ORIGIN_REMOTE $MASTER_BRANCH | wc -l` -gt 0 ]; then
-    echo "Pulling from $MASTER_BRANCH"
-    git pull $ORIGIN_REMOTE $MASTER_BRANCH
+    ui_run "Pull $ORIGIN_REMOTE/$MASTER_BRANCH" git pull $ORIGIN_REMOTE $MASTER_BRANCH
 fi
-git fetch --tags
-echo "................$bold OK $normal"
-echo
-echo
-echo "_________________________  Merge  ________________________________"
+ui_run "Fetch tags" git fetch --tags
 
-echo
-echo -n "From which branch do you want to merge? (branch → $MASTER_BRANCH) [$DEVELOP_BRANCH] "
-if [ -z ${yes_to_all} ]; then
-    read BRANCH_SOURCE
-fi
-BRANCH_SOURCE="${BRANCH_SOURCE:-$DEVELOP_BRANCH}"
-# echo $BRANCH_SOURCE
+# ── 3. Merge ───────────────────────────────────────────────────────
+ui_step 3 "Merge"
+ui_ask BRANCH_SOURCE "Merge from which branch into ${bold}$MASTER_BRANCH${normal}?" "$DEVELOP_BRANCH"
+ui_run "Fetch $ORIGIN_REMOTE" git fetch $ORIGIN_REMOTE
+MERGE_COUNT=$(git rev-list --count "HEAD..$ORIGIN_REMOTE/$BRANCH_SOURCE" 2>/dev/null || echo "?")
+if [ "$MERGE_COUNT" = 1 ]; then MERGE_LABEL="1 commit"; else MERGE_LABEL="$MERGE_COUNT commits"; fi
+ui_run "Merge $BRANCH_SOURCE → $MASTER_BRANCH ${dim}($MERGE_LABEL)${normal}" git merge $ORIGIN_REMOTE/$BRANCH_SOURCE
 
-echo "→ Initializing merge from: [${BRANCH_SOURCE}]"
-echo
-git fetch $ORIGIN_REMOTE
-MERGED=$(git merge $ORIGIN_REMOTE/$BRANCH_SOURCE)
-echo $MERGED
-echo
-echo
-echo "__________________________  Tag  _________________________________"
+# ── 4. Tag ─────────────────────────────────────────────────────────
+ui_step 4 "Tag"
 TAG_PREFIX=v
 LAST_TAG=$(git tag --sort=-creatordate | head -n 1)
 TAG_WITHOUT_PREFIX="${LAST_TAG#${TAG_PREFIX}}"
-if [ $LAST_TAG = $TAG_WITHOUT_PREFIX ]; then
+if [ "$LAST_TAG" = "$TAG_WITHOUT_PREFIX" ]; then
     TAG_PREFIX=
 fi
-echo
-echo "→ Last tag: $bold $TAG_WITHOUT_PREFIX $normal"
-echo
+ui_kv "Last tag" "${LAST_TAG:-none}"
 NEXT_TAG=$(semver -i $release_part ${TAG_WITHOUT_PREFIX:-${DEFAULT_INITIAL_VERSION}} || echo ${DEFAULT_INITIAL_VERSION})
 
-echo -n "Wich tag do you want to release (without prefix) [$NEXT_TAG]: "
-if [ -z ${yes_to_all} ]; then
-    read NEW_TAG
-fi
-NEW_TAG="${NEW_TAG:-$NEXT_TAG}"
-echo "New tag: "$NEW_TAG
+ui_ask NEW_TAG "Which tag do you want to release (without prefix)?" "$NEXT_TAG"
 NEW_MAJOR=$(echo $NEW_TAG | cut -d '.'  -f1)
 NEW_MINOR=$(echo $NEW_TAG | cut -d '.'  -f2)
-echo "New Major: "$NEW_MAJOR
-echo "New Minor: "$NEW_MINOR
+ui_kv "New tag" "${TAG_PREFIX}${NEW_TAG}"
+ui_kv "Major" "$NEW_MAJOR"
+ui_kv "Minor" "$NEW_MINOR"
 
 if [ -z ${short_tags} ]; then
-    echo -n "Do you want to generate short tags ${TAG_PREFIX}${NEW_MAJOR} and ${TAG_PREFIX}${NEW_MAJOR}.$NEW_MINOR? (y/n) [n]: "
-    read -n 1 -r
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if ui_confirm "Generate short tags ${bold}${TAG_PREFIX}${NEW_MAJOR}${normal} and ${bold}${TAG_PREFIX}${NEW_MAJOR}.$NEW_MINOR${normal}?"; then
         short_tags=1
     fi
 fi
 
 if [ -z ${no_test} ] && [ -f tox.ini ]; then
-    echo "Running tox"
+    ui_info "Running tox"
+    ui_rule
     tox -r
+    ui_rule
 fi
 
-echo
-echo "→ Creating new tag: $bold $NEW_TAG $normal and applying changes"
-
-# echo "TAG: $TAG_WITHOUT_PREFIX"
-
-echo
-echo "→ Bump Version to $bold $NEW_TAG $normal"
-# echo $(ex -sc '%s/$TAG_WITHOUT_PREFIX/$NEW_TAG/g|xq' package.json)
+# ── 5. Bump version ────────────────────────────────────────────────
+ui_step 5 "Bump version to ${TAG_PREFIX}${NEW_TAG}"
+bumped=
 
 if [ -f .bumpversion.cfg ] && [ "$(program_is_installed bump2version)" = 1 ]; then
-    echo "============== .bumpversion.cfg ============="
+    ui_info "Running bump2version ${dim}(.bumpversion.cfg)${normal}"
+    ui_rule
     bump2version --verbose --allow-dirty --new-version $NEW_TAG $NEW_TAG
+    ui_rule
+    bumped=1
 fi
 
 if [ -f pom.xml ]; then
-    echo "============== pom.xml ============="
+    ui_info "Running maven ${dim}(pom.xml)${normal}"
+    ui_rule
     MVN_OPTS=
     if [ ! -z ${no_test} ]; then
         MVN_OPTS=-Dmaven.test.skip=true
@@ -164,101 +168,107 @@ if [ -f pom.xml ]; then
         mvn clean package ${MVN_OPTS}
     fi
     mvn versions:set -DnewVersion=$NEW_TAG
+    ui_rule
+    bumped=1
 fi
 
 if [ -f gradle.properties ]; then
-    echo "============== gradle.properties ============="
-    echo $(perl -pi -e "s/version=.*/version=${NEW_TAG}/g" gradle.properties)
+    ui_run "Update gradle.properties" perl -pi -e "s/version=.*/version=${NEW_TAG}/g" gradle.properties
+    bumped=1
 fi
 if [ -f build.gradle ] || [ -f build.gradle.kts ]; then
     GRADLE_OPTS=
     if [ ! -z ${no_test} ]; then
         GRADLE_OPTS=-xtest
     fi
-    echo "============== build.gradle ============="
+    ui_info "Running gradle ${dim}(build.gradle)${normal}"
+    ui_rule
     if [ -f gradlew ]; then
         ./gradlew build ${GRADLE_OPTS}
     else
         gradle build ${GRADLE_OPTS}
     fi
+    ui_rule
+    bumped=1
 fi
 
 if [ -f package.json ]; then
-    npm --no-git-tag-version version $NEW_TAG
+    ui_run "Update package.json" npm --no-git-tag-version version $NEW_TAG
+    bumped=1
 fi
-echo "................$bold OK $normal"
-echo
-echo
-echo "________________________  Changelog  _____________________________"
-echo
-echo "→ Generating CHANGELOG.md"
 
-if [ ! "$HAS_PACKAGE_CONFIG" ];then
-  # echo "NÃO TEM"
-  CHANGELOG=$(auto-changelog -v "${TAG_PREFIX}${NEW_TAG}" --template "$FULL_PATH_BIN"/lib/template.hbs -u)
+if [ -z ${bumped} ]; then
+    ui_info "No version files found, only the tag will be created"
+fi
+
+# ── 6. Changelog ───────────────────────────────────────────────────
+ui_step 6 "Changelog"
+if [ ! "$HAS_PACKAGE_CONFIG" ]; then
+    ui_run "Generate CHANGELOG.md" auto-changelog -v "${TAG_PREFIX}${NEW_TAG}" --template "$FULL_PATH_BIN"/lib/template.hbs -u
 else
-  # echo "AQUI TEM"
-  CHANGELOG=$(auto-changelog -v "${TAG_PREFIX}${NEW_TAG}")
+    ui_run "Generate CHANGELOG.md" auto-changelog -v "${TAG_PREFIX}${NEW_TAG}"
 fi
 
-
-echo "................$bold OK $normal"
-
 echo
-echo
-head -n 25 CHANGELOG.md | cli-md
-echo
-echo
-# ask confirm
-
-echo    # (optional) move to a new line
-echo
-echo "_________________________  Finish  ______________________________"
-echo
-echo -n "Alright! Release tag? (y/n) [n] "
-REPLY=y
-if [ -z ${yes_to_all} ]; then
-    read -n 1 -r
+ui_rule
+# indent the preview to the same margin as the steps; cli-md only keeps its colors
+# through the pipe when --color comes after the input file
+CLI_MD_OPTS=
+if [ -n "$normal" ]; then
+    CLI_MD_OPTS=--color
 fi
-echo    # (optional) move to a new line
-if [[ ! $REPLY =~ ^[Yy]$ ]]
-then
-    # não fechar a tag, rollback
-    clear
-    echo "Rollback dos arquivos"
+head -n 25 CHANGELOG.md | cli-md /dev/stdin $CLI_MD_OPTS | sed 's/^/    /'
+ui_rule
+
+# ── 7. Release ─────────────────────────────────────────────────────
+ui_step 7 "Release"
+if [ -n "${dry_run}" ]; then
+    ui_warn "Dry run: nothing will be committed or pushed"
+fi
+
+if ! ui_confirm "Alright! Release tag ${bold}${TAG_PREFIX}${NEW_TAG}${normal}?" "$yes_to_all"; then
+    # release cancelled: rollback
+    ui_warn "Release cancelled, rolling back"
+    ui_run "Reset to $ORIGIN_REMOTE/$MASTER_BRANCH" git reset --hard $ORIGIN_REMOTE/$MASTER_BRANCH
+    ui_run "Back to $CURRENT_BRANCH" git checkout $CURRENT_BRANCH
     echo
-    git reset --hard $ORIGIN_REMOTE/$MASTER_BRANCH
-    git checkout $CURRENT_BRANCH
+    echo "  ${dim}Bye.${normal}"
+    echo
+    exit 0
+fi
+
+ui_run "Stage changes" git add --all
+if [ -z ${dry_run} ]; then
+    ui_run "Commit release ${TAG_PREFIX}${NEW_TAG}" git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}"
 else
-    # echo "SIM"
-    # do dangerous stuff
-    clear
-    echo
-    ADD=$(git add --all)
-    if [ -z ${dry_run} ]; then
-        git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}"
-    else
-        git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}" --dry-run
-    fi
-
-    if [ -z ${dry_run} ] && [ ! -z ${short_tags} ]; then
-        git tag -f ${TAG_PREFIX}${NEW_MAJOR}
-        git tag -f ${TAG_PREFIX}${NEW_MAJOR}.$NEW_MINOR
-    fi
-    if [ -z ${dry_run} ]; then
-        git tag ${TAG_PREFIX}${NEW_TAG}
-        echo "Release version: $NEW_TAG"
-        git checkout $DEVELOP_BRANCH
-        git merge --no-ff --no-edit ${TAG_PREFIX}${NEW_TAG}
-        git push $ORIGIN_REMOTE $MASTER_BRANCH --tags --force
-        git push $ORIGIN_REMOTE $DEVELOP_BRANCH
-    else
-        git reset --hard $ORIGIN_REMOTE/$MASTER_BRANCH
-        git checkout $CURRENT_BRANCH
-    fi
-
-    echo
-    echo "$bold All right! $normal"
+    ui_run "Commit release ${TAG_PREFIX}${NEW_TAG} ${dim}(dry run)${normal}" git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}" --dry-run
 fi
+
+if [ -z ${dry_run} ] && [ ! -z ${short_tags} ]; then
+    ui_run "Tag ${TAG_PREFIX}${NEW_MAJOR}" git tag -f ${TAG_PREFIX}${NEW_MAJOR}
+    ui_run "Tag ${TAG_PREFIX}${NEW_MAJOR}.$NEW_MINOR" git tag -f ${TAG_PREFIX}${NEW_MAJOR}.$NEW_MINOR
+fi
+
+summary=("tag=${TAG_PREFIX}${NEW_TAG}")
+if [ ! -z ${short_tags} ]; then
+    summary+=("short tags=${TAG_PREFIX}${NEW_MAJOR}, ${TAG_PREFIX}${NEW_MAJOR}.$NEW_MINOR")
+fi
+summary+=("merge=$BRANCH_SOURCE → $MASTER_BRANCH")
+
+if [ -z ${dry_run} ]; then
+    ui_run "Tag ${TAG_PREFIX}${NEW_TAG}" git tag ${TAG_PREFIX}${NEW_TAG}
+    ui_run "Checkout $DEVELOP_BRANCH" git checkout $DEVELOP_BRANCH
+    ui_run "Merge ${TAG_PREFIX}${NEW_TAG} → $DEVELOP_BRANCH" git merge --no-ff --no-edit ${TAG_PREFIX}${NEW_TAG}
+    ui_run "Push $MASTER_BRANCH and tags" git push $ORIGIN_REMOTE $MASTER_BRANCH --tags --force
+    ui_run "Push $DEVELOP_BRANCH" git push $ORIGIN_REMOTE $DEVELOP_BRANCH
+    summary+=("pushed=$MASTER_BRANCH, $DEVELOP_BRANCH, tags → $ORIGIN_REMOTE")
+else
+    ui_run "Reset to $ORIGIN_REMOTE/$MASTER_BRANCH" git reset --hard $ORIGIN_REMOTE/$MASTER_BRANCH
+    ui_run "Back to $CURRENT_BRANCH" git checkout $CURRENT_BRANCH
+    summary+=("pushed=nothing (dry run)")
+fi
+
+ui_box "Release summary" "${summary[@]}"
 echo
-echo "$bold Bye. $normal"
+echo "  ${green}${bold}All right!${normal} ${dim}Bye.${normal}"
+echo
