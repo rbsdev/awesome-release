@@ -209,8 +209,15 @@ else
     ui_run "Generate CHANGELOG.md" auto-changelog -v "${TAG_PREFIX}${NEW_TAG}"
 fi
 
+echo
 ui_rule
-head -n 25 CHANGELOG.md | cli-md
+# indent the preview to the same margin as the steps; cli-md only keeps its colors
+# through the pipe when --color comes after the input file
+CLI_MD_OPTS=
+if [ -n "$normal" ]; then
+    CLI_MD_OPTS=--color
+fi
+head -n 25 CHANGELOG.md | cli-md /dev/stdin $CLI_MD_OPTS | sed 's/^/    /'
 ui_rule
 
 # ── 7. Release ─────────────────────────────────────────────────────

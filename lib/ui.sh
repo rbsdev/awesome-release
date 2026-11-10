@@ -27,7 +27,55 @@ fi
 
 UI_SPIN=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
 
+# Banner uses the same blue as the step numbers (empty without colors)
+UI_BANNER_COLOR=$blue
+
+# Banner glyphs: 5 rows per character. Indexed arrays + ${!ref} keep bash 3.2 (macOS) working.
+UI_GLYPH_a=($'       ' $'  __ _ ' $' / _` |' $'| (_| |' $' \\__,_|')
+UI_GLYPH_w=($'          ' $'__      __' $'\\ \\ /\\ / /' $' \\ V  V / ' $'  \\_/\\_/  ')
+UI_GLYPH_e=($'      ' $'  ___ ' $' / _ \\' $'|  __/' $' \\___|')
+UI_GLYPH_s=($'     ' $' ___ ' $'/ __|' $'\\__ \\' $'|___/')
+UI_GLYPH_o=($'       ' $'  ___  ' $' / _ \\ ' $'| (_) |' $' \\___/ ')
+UI_GLYPH_m=($'           ' $' _ __ ___  ' $'| \'_ ` _ \\ ' $'| | | | | |' $'|_| |_| |_|')
+UI_GLYPH_r=($'      ' $' _ __ ' $'| \'__|' $'| |   ' $'|_|   ')
+UI_GLYPH_l=($' _ ' $'| |' $'| |' $'| |' $'|_|')
+UI_GLYPH_dash=($'       ' $'       ' $' _____ ' $'|_____|' $'       ')
+
+# Bottom margin for the whole run: a terminal scroll region keeps every line of output,
+# including git/mvn/cli-md, above the last UI_BOTTOM_MARGIN rows (terminal only)
+UI_BOTTOM_MARGIN=2
+UI_MARGIN_ACTIVE=
+
+ui_margin_apply() {
+    local rows
+    rows=$(tput lines 2>/dev/null || echo 0)
+    if [ "$rows" -le $(( UI_BOTTOM_MARGIN + 10 )) ]; then
+        printf '\e7\e[r\e8'
+        return 0
+    fi
+    # save cursor, set region (which homes the cursor), restore cursor
+    printf '\e7\e[1;%dr\e8' $(( rows - UI_BOTTOM_MARGIN ))
+}
+
+ui_margin_start() {
+    [ -n "$UI_TTY" ] || return 0
+    # move the cursor above the margin first, so it starts inside the region
+    ui_repeat $'\n' $UI_BOTTOM_MARGIN
+    tput cuu $UI_BOTTOM_MARGIN 2>/dev/null || true
+    ui_margin_apply
+    UI_MARGIN_ACTIVE=1
+    trap ui_margin_apply WINCH
+}
+
+ui_margin_stop() {
+    [ -n "$UI_MARGIN_ACTIVE" ] || return 0
+    trap - WINCH
+    printf '\e7\e[r\e8'
+    UI_MARGIN_ACTIVE=
+}
+
 ui_cleanup() {
+    ui_margin_stop
     [ -n "$UI_TTY" ] && tput cnorm 2>/dev/null
     [ ${#UI_TMP_FILES[@]} -gt 0 ] && rm -f "${UI_TMP_FILES[@]}"
     return 0
@@ -40,13 +88,55 @@ ui_repeat() {
     for (( i = 0 ; i < $2 ; i++ )); do printf '%s' "$1"; done
 }
 
+# ui_banner INDENT WORD — prints WORD in ascii art with the banner color
+ui_banner() {
+    local indent=$1 word=$2 row i c ref line
+    for (( row = 0 ; row < 5 ; row++ )); do
+        line=$(printf '%*s' "$indent" "")
+        for (( i = 0 ; i < ${#word} ; i++ )); do
+            c=${word:i:1}
+            [ "$c" = "-" ] && c=dash
+            ref="UI_GLYPH_${c}[$row]"
+            line+="${bold}${UI_BANNER_COLOR}${!ref}${normal}"
+        done
+        # skip rows that are only spaces (e.g. the top row of "awesome")
+        if [ -n "$(printf '%s' "$line" | sed -e 's/\x1b[^m]*m//g' -e 's/\x1b(B//g' | tr -d ' ')" ]; then
+            echo "$line"
+        fi
+    done
+}
+
+# ui_header [TAGLINE] [INFO] — banner (or compact header) plus a dim tagline and an info line;
+# defaults to the release tagline and the repo/remote line
 ui_header() {
-    local version repo
+    local version repo cols width tagline=${1:-"tag · merge · changelog"} info=$2
     version=$(node -p "require('$FULL_PATH_BIN/package.json').version" 2>/dev/null || true)
-    repo=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+    if [ -z "$info" ]; then
+        repo=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+        info="${dim}repo:${normal} $repo ${dim}·${normal} ${dim}remote:${normal} $ORIGIN_REMOTE"
+    fi
+    cols=$(tput cols 2>/dev/null || echo 80)
+
+    ui_margin_start
     echo
-    echo "  ${cyan}◆${normal} ${bold}awesome-release${normal}  ${dim}${version:+v$version}${normal}"
-    echo "  ${dim}repo:${normal} $repo ${dim}·${normal} ${dim}remote:${normal} $ORIGIN_REMOTE"
+    if [ -z "$UI_TTY" ] || [ "${AWESOME_RELEASE_BANNER}" = 0 ] || [ "$cols" -lt 56 ]; then
+        echo "  ${cyan}◆${normal} ${bold}awesome-release${normal}  ${dim}${version:+v$version}${normal}"
+        if [ -n "$1" ]; then
+            echo "  ${dim}$tagline${normal}"
+        fi
+    else
+        if [ "$cols" -ge 100 ]; then
+            ui_banner 2 awesome-release
+            width=98
+        else
+            ui_banner 2 awesome
+            ui_banner 15 release
+            width=52
+        fi
+        echo
+        printf '  %s%s%s%*s%s\n' "$dim" "$tagline" "$normal" $(( width - ${#tagline} )) "${version:+v$version}" "$normal"
+    fi
+    echo "  $info"
 }
 
 ui_step() {
