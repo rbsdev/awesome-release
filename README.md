@@ -52,7 +52,7 @@ You will receive the following output:
 ✔  cli-md
 ```
 * This output shows if you have all necessary dependencies and all of them are ok.
-* awesome-release will automatically checkout to `master` branch.
+* awesome-release will automatically checkout to `master` branch (or `main`, if `master` doesn't exist on the remote).
 * Next, it will ask you from what branch do you want to merge the code (`develop` is the default branch).
 
 Example:
@@ -100,6 +100,8 @@ Save it and run `npm install -g` again.
    [df-auto-changelog]: <https://github.com/CookPete/auto-changelog>
 
 ## Change default branches
+
+Without `MASTER_BRANCH`, awesome-release uses `master` and falls back to `main` when `master` doesn't exist on the remote. Set it to force a specific branch:
 
     MASTER_BRANCH=main awesome-release
 
