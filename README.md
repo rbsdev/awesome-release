@@ -43,6 +43,29 @@ npm install -g
 ```
 Don't use `sudo` with nvm. Global packages in nvm belong to one Node version: after switching versions, run `npm install -g` again, or install the new version with `nvm install <new> --reinstall-packages-from=<old>`.
 
+### Update
+
+If awesome-release is already installed, run the updater from your clone. It finds the installation (standard Node or nvm), updates the clone and reinstalls the command, showing the new interface (banner, steps and summary) even when coming from an old version.
+
+Versions that already have `update.sh`:
+```
+cd awesome-release
+./update.sh
+```
+
+Older versions (without `update.sh`), run the updater straight from the remote, without `git pull`:
+```
+cd awesome-release
+git fetch
+bash <(git show origin/master:update.sh)
+```
+
+Options:
+* `--ref <branch|tag>`: version to update to (default: `master`, or `main` if `master` doesn't exist).
+* `--source <dir>`: clone to update, when it can't be found automatically.
+
+The updater stops if the clone has local changes; save them with `git stash` first. With nvm, run it with the same Node version where awesome-release is installed.
+
 ### How to use
 
 First of all, create a merge/pull request in your repository manager (github, gitlab, bitbucket), use the description field to describe all your modifications. Accept your merge to a branch of your choice, we will use the `develop` branch as an example.
@@ -54,13 +77,24 @@ awesome-release
 ```
 The release runs in 7 numbered steps (Dependencies, Checkout, Merge, Tag, Bump version, Changelog, Release), with a spinner while git and auto-changelog work and a summary at the end:
 ```
-  ◆ awesome-release  v1.7.0
+    __ _ __      __  ___  ___   ___   _ __ ___    ___
+   / _` |\ \ /\ / / / _ \/ __| / _ \ | '_ ` _ \  / _ \
+  | (_| | \ V  V / |  __/\__ \| (_) || | | | | ||  __/
+   \__,_|  \_/\_/   \___||___/ \___/ |_| |_| |_| \___|
+                            _
+                _ __   ___ | |  ___   __ _  ___   ___
+               | '__| / _ \| | / _ \ / _` |/ __| / _ \
+               | |   |  __/| ||  __/| (_| |\__ \|  __/
+               |_|    \___||_| \___| \__,_||___/ \___|
+
+  tag · merge · changelog                       v1.7.0
   repo: project · remote: origin
 
   [1/7] Dependencies
     ✔ node  ✔ npm  ✔ git  ✔ semver  ✔ auto-changelog  ✔ cli-md
 ```
 * The first step shows if you have all necessary dependencies and all of them are ok. A missing one is listed with the command to install it.
+* The banner is drawn in one line on terminals with 100+ columns, in two lines from 56 columns, and replaced by a compact header on narrower terminals. Set `AWESOME_RELEASE_BANNER=0` to always use the compact header.
 * Colors and the spinner are only used in an interactive terminal; piped or CI output is plain text. Set `NO_COLOR=1` to disable colors.
 * If a command fails (a merge conflict, for example), awesome-release shows its output and stops.
 * awesome-release will automatically checkout to `master` branch (or `main`, if `master` doesn't exist on the remote).
