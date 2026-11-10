@@ -26,11 +26,22 @@ Clone the project
 git clone git@github.com:rbsdev/awesome-release.git
 ```
 
-Install all dependencies as global
+Install all dependencies as global. awesome-release finds its own install folder, so it works with a standard Node installation and with [nvm](https://github.com/nvm-sh/nvm).
+
+##### Standard Node
 ```
 cd awesome-release
 npm install -g
 ```
+Depending on how Node was installed, this may require `sudo`.
+
+##### nvm
+```
+cd awesome-release
+nvm use <version>
+npm install -g
+```
+Don't use `sudo` with nvm. Global packages in nvm belong to one Node version: after switching versions, run `npm install -g` again, or install the new version with `nvm install <new> --reinstall-packages-from=<old>`.
 
 ### How to use
 
@@ -81,11 +92,9 @@ If you need help, just type  `awesome-release --help`.
 
 If there is a problem with the installation via npm and permissions <a href="https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally" >follow this tutorial to reconfigure npm.</a> This is a common issue for Linux users.
 
-Aditionally, if you have issues runnning the **awesome-release** command (command not found, etc), open the `./awesome-release` file in the repo that you cloned to your machine and update the `FULL_PATH_BIN` variable to something like:
+awesome-release detects its install folder automatically. If it can't find its files (`awesome-release files not found in ...`), point it to the installed package with `AWESOME_RELEASE_HOME`:
 
-`/home/$USER/.npm-global/lib/node_modules/awesome-release`
-
-Save it and run `npm install -g` again.
+    AWESOME_RELEASE_HOME=/home/$USER/.npm-global/lib/node_modules/awesome-release awesome-release
 
 
 | Main Contributors | - |
