@@ -53,7 +53,7 @@ function npm_package_is_installed {
 
   local return_=1
   # set to 0 if not found
-  ls $(dirname $(realpath $0))/node_modules | grep $1 >/dev/null 2>&1 || { local return_=0; }
+  ls "$FULL_PATH_BIN"/node_modules | grep $1 >/dev/null 2>&1 || { local return_=0; }
   # return value
   echo "$return_"
 }

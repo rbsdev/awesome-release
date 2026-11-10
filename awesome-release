@@ -1,7 +1,13 @@
 #!/bin/bash
 # FIRST CHECK PACKAGE
 HAS_PACKAGE_CONFIG=$(cat package.json 2>/dev/null | grep "auto-changelog" | head -1)
-FULL_PATH_BIN="/usr/local/lib/node_modules/awesome-release"
+# Resolve o symlink do bin para achar a pasta do pacote (node padrão, nvm, npm link)
+resolve_self() {
+    realpath "$0" 2>/dev/null \
+        || readlink -f "$0" 2>/dev/null \
+        || node -e 'console.log(require("fs").realpathSync(process.argv[1]))' "$0"
+}
+FULL_PATH_BIN=${AWESOME_RELEASE_HOME:-$(dirname "$(resolve_self)")}
 echo
 if [ ! -z ${DEBUG} ]; then
     set -x
@@ -18,7 +24,11 @@ ORIGIN_REMOTE=${ORIGIN_REMOTE:-origin}
 
 DEFAULT_INITIAL_VERSION=${DEFAULT_INITIAL_VERSION:-0.0.0}
 
-source $FULL_PATH_BIN/lib/is_installed.sh
+if [ ! -f "$FULL_PATH_BIN/lib/is_installed.sh" ]; then
+    echo "awesome-release files not found in $FULL_PATH_BIN. Set AWESOME_RELEASE_HOME."
+    exit 1
+fi
+source "$FULL_PATH_BIN/lib/is_installed.sh"
 # pwd
 # echo $HAS_PACKAGE_CONFIG
 # echo $FULL_PATH_BIN
