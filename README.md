@@ -45,9 +45,14 @@ Don't use `sudo` with nvm. Global packages in nvm belong to one Node version: af
 
 ### Update
 
-If awesome-release is already installed, run the updater from your clone. It finds the installation (standard Node or nvm), updates the clone and reinstalls the command, showing the new interface (banner, steps and summary) even when coming from an old version.
+If awesome-release is already installed, run the updater. It finds the installation (standard Node or nvm), updates the clone and reinstalls the command, showing the new interface (banner, steps and summary) even when coming from an old version.
 
-Versions that already have `update.sh`:
+Versions that already have the `update` command, from any folder:
+```
+awesome-release update
+```
+
+Versions that already have `update.sh`, from the clone (`npm run update` also works there):
 ```
 cd awesome-release
 ./update.sh
