@@ -8,6 +8,12 @@ resolve_self() {
         || node -e 'console.log(require("fs").realpathSync(process.argv[1]))' "$0"
 }
 FULL_PATH_BIN=${AWESOME_RELEASE_HOME:-$(dirname "$(resolve_self)")}
+
+# `awesome-release update [options]` runs the updater of this installation, from any folder
+if [ "$1" = update ]; then
+    shift
+    exec bash "$FULL_PATH_BIN/update.sh" "$@"
+fi
 if [ ! -z ${DEBUG} ]; then
     set -x
 fi

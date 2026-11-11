@@ -7,6 +7,7 @@ function print_help {
    or: awesome-release [<options>] [-i|--increment major|minor|patch]
    or: awesome-release [<options>] [-r|--remote origin]
    or: MASTER_BRANCH=main awesome-release [<options>] [-r|--remote origin]
+   or: awesome-release update [--ref <branch|tag>] [--source <clone dir>]
 
 ${bold}Options:${normal}
       -h, --help          This help
