@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.rbs.com.br:rbsdev/awesome-release.git"
+    "url": "git+https://github.com/rbsdev/awesome-release.git"
   },
   "author": "Time Assinaturas",
   "license": "ISC",
