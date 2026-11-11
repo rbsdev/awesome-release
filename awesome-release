@@ -69,6 +69,18 @@ ui_header
 ui_step 1 "Dependencies"
 test_requirements || exit 1
 
+# the release commit must contain only what the script generates: changes left in
+# the working tree would follow the checkout to the release branch and be committed
+# and pushed with the release (and the rollback reset would discard them)
+if [ -n "$(git status --porcelain)" ]; then
+    echo
+    ui_error "Working tree is not clean. Commit or stash your changes before releasing:"
+    git status --short | sed 's/^/      /'
+    echo
+    exit 1
+fi
+ui_ok "Working tree is clean"
+
 branch_exists() {
     [ -n "$(git branch -la --format "%(refname:short)" "${ORIGIN_REMOTE}/$1")" ]
 }
@@ -226,6 +238,13 @@ if [ -n "${dry_run}" ]; then
     ui_warn "Dry run: nothing will be committed or pushed"
 fi
 
+# only tracked files bumped by the release plus the changelog, which may be new:
+# untracked files created during the release (build output, backups) stay out
+ui_run "Stage changes" git add --update
+ui_run "Stage CHANGELOG.md" git add CHANGELOG.md
+ui_info "Release commit:"
+git diff --cached --name-status | sed 's/^/      /'
+
 if ! ui_confirm "Alright! Release tag ${bold}${TAG_PREFIX}${NEW_TAG}${normal}?" "$yes_to_all"; then
     # release cancelled: rollback
     ui_warn "Release cancelled, rolling back"
@@ -237,7 +256,6 @@ if ! ui_confirm "Alright! Release tag ${bold}${TAG_PREFIX}${NEW_TAG}${normal}?" 
     exit 0
 fi
 
-ui_run "Stage changes" git add --all
 if [ -z ${dry_run} ]; then
     ui_run "Commit release ${TAG_PREFIX}${NEW_TAG}" git commit -m ":bookmark: Release version: ${TAG_PREFIX}${NEW_TAG}"
 else
