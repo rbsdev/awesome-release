@@ -114,7 +114,9 @@ ui_run "Checkout $MASTER_BRANCH" git checkout $MASTER_BRANCH
 if [ `git ls-remote --heads $ORIGIN_REMOTE $MASTER_BRANCH | wc -l` -gt 0 ]; then
     ui_run "Pull $ORIGIN_REMOTE/$MASTER_BRANCH" git pull $ORIGIN_REMOTE $MASTER_BRANCH
 fi
-ui_run "Fetch tags" git fetch --tags
+# short tags (vX, vX.Y) are moved with --force on every release: without --force here,
+# a stale local copy makes the fetch fail with "would clobber existing tag"
+ui_run "Fetch tags" git fetch --tags --force
 
 # ── 3. Merge ───────────────────────────────────────────────────────
 ui_step 3 "Merge"
@@ -127,7 +129,10 @@ ui_run "Merge $BRANCH_SOURCE → $MASTER_BRANCH ${dim}($MERGE_LABEL)${normal}" g
 # ── 4. Tag ─────────────────────────────────────────────────────────
 ui_step 4 "Tag"
 TAG_PREFIX=v
-LAST_TAG=$(git tag --sort=-creatordate | head -n 1)
+# ignore short tags (vX, vX.Y): they point to the same commit as the full tag and
+# could be picked first, making semver fail and the suggestion fall back to the default
+# (|| true: a repo without tags is valid, and set -e with pipefail would stop here)
+LAST_TAG=$(git tag --sort=-creatordate | { grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+' || true; } | head -n 1)
 TAG_WITHOUT_PREFIX="${LAST_TAG#${TAG_PREFIX}}"
 if [ "$LAST_TAG" = "$TAG_WITHOUT_PREFIX" ]; then
     TAG_PREFIX=
