@@ -70,6 +70,8 @@ The updater stops if the clone has local changes; save them with `git stash` fir
 
 First of all, create a merge/pull request in your repository manager (github, gitlab, bitbucket), use the description field to describe all your modifications. Accept your merge to a branch of your choice, we will use the `develop` branch as an example.
 
+The working tree must be clean: the release stops if there are staged, modified or untracked files, so they don't end up in the release commit. Commit them or save them with `git stash` first. The release commit only includes the files the release changes (version files and `CHANGELOG.md`), listed before the confirmation.
+
 Go to a `git` repo to initialize:
 ```
 cd ~/repositories/project/
