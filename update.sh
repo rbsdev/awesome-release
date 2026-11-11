@@ -1,7 +1,8 @@
 #!/bin/bash
 # Updates an existing awesome-release installation, installed with standard Node or nvm.
 #
-# Usage: ./update.sh [-r|--ref <branch|tag>] [-s|--source <clone dir>] [-h|--help]
+# Usage: awesome-release update [-r|--ref <branch|tag>] [-s|--source <clone dir>] [-h|--help]
+#    or: ./update.sh [<options>]  (from the clone; also npm run update -- [<options>])
 #
 #   --ref      branch or tag to update to (default: master, or main if master doesn't exist)
 #   --source   awesome-release git clone to update (default: the clone the installed
@@ -22,7 +23,7 @@ fi
 fail() { echo; echo "    ${red}✘${normal} $*" 1>&2; echo 1>&2; exit 1; }
 
 usage() {
-    sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
     exit "${1:-0}"
 }
 

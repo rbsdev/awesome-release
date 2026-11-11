@@ -1,11 +1,12 @@
 {
   "name": "awesome-release",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "CLI that automates releases: bumps the version, creates the git tag and generates the CHANGELOG from merged pull requests",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "preinstall": "npm i -g auto-changelog@^2 cli-md@^1 semver@^7"
+    "preinstall": "npm i -g auto-changelog@^2 cli-md@^1 semver@^7",
+    "update": "bash ./update.sh"
   },
   "repository": {
     "type": "git",
