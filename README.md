@@ -57,7 +57,13 @@ awesome-release update
 
 The updater finds the installation (standard Node or nvm), updates the clone and reinstalls the command.
 
-awesome-release also checks for a new version once a day, when it runs in an interactive terminal. If there is one, it asks whether to update now, then runs the release again with the same options. With `-y` it only shows the notice. The check never blocks the release: offline or without access to the remote, it is skipped. Disable it with `AWESOME_RELEASE_UPDATE_CHECK=0`.
+Before step 1, every run shows whether you are on the latest version:
+```
+    ✔ You are running the latest version (v2.0.4)
+    ⚠ Update available: v2.0.5 (installed: v2.0.4)
+    ? Update now? (y/N)
+```
+The remote is queried once a day; the other runs use the last result. When the daily check finds a new version on an interactive terminal, awesome-release asks whether to update now, then runs the release again with the same options. With `-y`, or on the other runs of the day, it only shows the notice. The check never blocks the release: offline or without access to the remote, it shows `Could not check for updates` and goes on. Disable it with `AWESOME_RELEASE_UPDATE_CHECK=0`.
 
 | Option | Description |
 |---|---|
@@ -172,7 +178,7 @@ Without any of them, only the tag is created.
 | `AWESOME_RELEASE_BANNER` | | `0` always uses the compact header instead of the banner |
 | `NO_COLOR` | | Any value disables colors |
 | `AWESOME_RELEASE_HOME` | detected | Install folder, when it can't be found |
-| `AWESOME_RELEASE_UPDATE_CHECK` | | `0` disables the daily check for a new version |
+| `AWESOME_RELEASE_UPDATE_CHECK` | | `0` disables the version notice and the daily update check |
 | `DEBUG` | | Any value prints every command (`set -x`) |
 
 ```
