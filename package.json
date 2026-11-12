@@ -1,6 +1,6 @@
 {
   "name": "awesome-release",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "CLI that automates releases: bumps the version, creates the git tag and generates the CHANGELOG from merged pull requests",
   "main": "index.js",
   "scripts": {
