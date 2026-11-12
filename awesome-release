@@ -26,7 +26,7 @@ ORIGIN_REMOTE=${ORIGIN_REMOTE:-origin}
 
 DEFAULT_INITIAL_VERSION=${DEFAULT_INITIAL_VERSION:-0.0.0}
 
-for lib_file in ui.sh is_installed.sh update_check.sh; do
+for lib_file in ui.sh is_installed.sh; do
     if [ ! -f "$FULL_PATH_BIN/lib/$lib_file" ]; then
         echo "awesome-release files not found in $FULL_PATH_BIN. Set AWESOME_RELEASE_HOME."
         exit 1
@@ -34,7 +34,10 @@ for lib_file in ui.sh is_installed.sh update_check.sh; do
 done
 source "$FULL_PATH_BIN/lib/ui.sh"
 source "$FULL_PATH_BIN/lib/is_installed.sh"
-source "$FULL_PATH_BIN/lib/update_check.sh"
+# optional: without it the release runs without the update check
+if [ -f "$FULL_PATH_BIN/lib/update_check.sh" ]; then
+    source "$FULL_PATH_BIN/lib/update_check.sh"
+fi
 
 # kept to run the release again after an update
 AWESOME_RELEASE_ARGS=("$@")
@@ -74,7 +77,11 @@ while true ; do
 done
 
 ui_header
-check_for_update "${AWESOME_RELEASE_ARGS[@]}"
+# the update check never stops the release: called in a || list, set -e doesn't abort
+# on its errors, and a failure only shows a notice
+if declare -F check_for_update >/dev/null; then
+    check_for_update "${AWESOME_RELEASE_ARGS[@]}" || ui_info "${dim}Could not check for updates${normal}"
+fi
 
 # ── 1. Dependencies ────────────────────────────────────────────────
 ui_step 1 "Dependencies"
